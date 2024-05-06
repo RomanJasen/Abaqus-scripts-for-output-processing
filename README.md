@@ -4,7 +4,7 @@ Main usecases are seismic (or other) analysis of complete buildings (modelled by
 
 Here, along with the scripts, videos are provided explaining different levels of scripts. One showing how they can be used with almost no coding knowledge, another showing how the ease of conducting analyses can be improved with very basic coding knowledge, and more indepth dive into their structure to allow modification for specialisation in different tasks. If you create a notable addaptation of the script, i would love to see it, publishing as a branch of this repository is an option :)
 
-These scripts are to be published in a article, which will be linked here. If you use them in a paper, please reference the main article. (Link will be here as soon as it is published)
+These scripts are to be published in a article, which will be linked here. If you use them in research, please reference the provided article. (Link will be here as soon as it is published)
  - 
  If you have any questions or sudgestions please contact me on the email: romano.jevtic.rundek@grad.unizg.hr
 
