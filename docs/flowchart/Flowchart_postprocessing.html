@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post-processing flowchart</title>
+<style>
+:root{--ink:#0f172a;--text:#334155;--muted:#64748b;--line:#e2e8f0;--soft:#f8fafc;
+--c1:#1d4ed8;--c1f:#eff6ff;--c2a:#b45309;--c2af:#fff8eb;--c2b:#047857;--c2bf:#ecfdf5}
+*{box-sizing:border-box}
+html{background:#eef2f6}
+body{margin:0;font-family:'Segoe UI',Arial,Helvetica,sans-serif;color:var(--text);font-size:14px;line-height:1.5;
+-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sheet{max-width:1180px;margin:24px auto;background:#fff;border-radius:14px;padding:30px 36px;
+box-shadow:0 1px 3px rgba(15,23,42,.08)}
+h1{font-size:25px;line-height:1.25;color:var(--ink);margin:0 0 4px}
+h2{font-size:18px;color:var(--ink);margin:26px 0 10px}
+.sub{font-size:15px;color:var(--muted);margin:0}
+.meta{font-size:12px;color:var(--muted);margin:8px 0 0}
+figure{margin:16px 0 6px;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-size:12.5px;color:var(--muted);margin:8px 2px 0}
+.links{font-size:12px;color:var(--muted);margin:4px 2px 0}
+.links a{color:var(--c1)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--soft)}
+.card h3{margin:0 0 6px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.card p{margin:0;font-size:13px}
+.b{display:inline-block;min-width:24px;padding:0 7px;border-radius:9px;color:#fff;font-weight:700;font-size:11.5px;
+text-align:center;line-height:18px}
+.b1{background:var(--c1)}.b2a{background:var(--c2a)}.b2b{background:var(--c2b)}
+code,.mono{font-family:Consolas,'Courier New',monospace;font-size:12.5px}
+code{background:#f1f5f9;border-radius:4px;padding:0 4px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{background:#f1f5f9;color:var(--ink);font-weight:600}
+tr{break-inside:avoid}
+.two{display:grid;grid-template-columns:1.25fr 1fr;gap:20px}
+pre{font-family:Consolas,'Courier New',monospace;font-size:12px;background:var(--soft);border:1px solid var(--line);
+border-radius:8px;padding:10px 12px;margin:0;line-height:1.45;white-space:pre}
+.note{border-left:3px solid var(--c1);background:var(--c1f);padding:9px 12px;border-radius:0 8px 8px 0;font-size:13px}
+footer{margin-top:22px;font-size:11.5px;color:var(--muted)}
+@page{size:A4 landscape;margin:9mm 10mm}
+@media print{html{background:#fff}.sheet{margin:0;max-width:none;box-shadow:none;border-radius:0;padding:0}
+.page{break-after:page}.links{display:none}h2{margin-top:6px}body{font-size:11.5px}
+figure{padding:6px}table{font-size:10.3px;line-height:1.38}th,td{padding:4px 6px}pre{font-size:9.8px;line-height:1.35;
+padding:7px 10px}.card p{font-size:11.3px}code,.mono{font-size:10.2px}code{padding:0 3px}
+.two{margin-top:10px!important;gap:16px}h2{font-size:15px;margin:2px 0 6px}.note{font-size:11px;padding:6px 10px}
+footer{margin-top:8px}.detail figure{margin-top:4px}}
+</style></head>
+<body><main class="sheet">
+<section class="page">
+<h1>Post-processing of Abaqus results with the A_ scripts</h1>
+<p class="sub">Section export, image export and pushover curves — one module of the seismic analysis workflow</p>
+<p class="meta">Scripts: <span class="mono">Abaqus-scripts-for-output-processing / 3_export_and_image_export</span> · Abaqus/CAE or Viewer 2021 (Python 2.7) · 10 November 2026</p>
+<figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1610 650" role="img" aria-label="ODB files from the Abaqus analyses go in; A_1 writes the results database, A_2_Image_save_view stores the picture definitions, and A_2_Image_export_Auto turns both into images per frame and pushover curves."><title>Post-processing module: Abaqus ODB files → section histories, images, pushover curves</title><desc>ODB files from the Abaqus analyses go in; A_1 writes the results database, A_2_Image_save_view stores the picture definitions, and A_2_Image_export_Auto turns both into images per frame and pushover curves.</desc><defs>
+<marker id="ah334155" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7.5" markerHeight="7.5" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0.6 L 10 5 L 0 9.4 Z" fill="#334155"/></marker>
+<marker id="ahb45309" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7.5" markerHeight="7.5" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0.6 L 10 5 L 0 9.4 Z" fill="#b45309"/></marker>
+</defs>
+<rect x="0" y="0" width="1610" height="650" fill="#ffffff"/>
+<text x="30.0" y="42.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif"  font-weight="bold" fill="#0f172a" text-anchor="start" font-size="20">Post-processing module: Abaqus ODB files → section histories, images, pushover curves</text>
+<text x="30.0" y="66.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#64748b" text-anchor="start">A_1_Export_Auto.py  ·  A_2_Image_save_view.py  ·  A_2_Image_export_Auto.py   (Abaqus/CAE or Viewer 2021)</text>
+<path d="M 140.0 320.0 L 180.0 320.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 350.0 160.0 L 400.0 160.0" fill="none" stroke="#b45309" stroke-width="1.6" marker-end="url(#ahb45309)"/>
+<path d="M 350.0 320.0 L 368.0 320.0 Q 375.0 320.0 375.0 327.0 L 375.0 473.0 Q 375.0 480.0 382.0 480.0 L 400.0 480.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 350.0 320.0 L 960.0 320.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 660.0 160.0 L 710.0 160.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 660.0 480.0 L 710.0 480.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 910.0 160.0 L 960.0 160.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 810.0 430.0 L 810.0 407.0 Q 810.0 400.0 817.0 400.0 L 1063.0 400.0 Q 1070.0 400.0 1070.0 393.0 L 1070.0 370.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 910.0 480.0 L 1470.0 480.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 1180.0 160.0 L 1230.0 160.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 1180.0 320.0 L 1230.0 320.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 1430.0 160.0 L 1470.0 160.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 1430.0 320.0 L 1470.0 320.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<circle cx="375.0" cy="320.0" r="3.6" fill="#334155"/>
+<rect x="30" y="110" width="110" height="420" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="85.0" y="259.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.0" font-weight="bold" fill="#475569" text-anchor="middle">FROM</text>
+<text x="85.0" y="273.4" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">previous steps</text>
+<text x="85.0" y="294.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">model with</text>
+<text x="85.0" y="309.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">cross-section</text>
+<text x="85.0" y="324.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">SETs</text>
+<text x="85.0" y="345.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">Abaqus/</text>
+<text x="85.0" y="360.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">Standard or</text>
+<text x="85.0" y="375.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">Explicit</text>
+<text x="85.0" y="390.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">analyses</text>
+<rect x="1470" y="110" width="110" height="420" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="1525.0" y="263.5" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.0" font-weight="bold" fill="#475569" text-anchor="middle">TO</text>
+<text x="1525.0" y="277.9" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">next steps</text>
+<text x="1525.0" y="298.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">damage-state</text>
+<text x="1525.0" y="313.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">identification</text>
+<text x="1525.0" y="334.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">capacity</text>
+<text x="1525.0" y="349.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">curves</text>
+<text x="1525.0" y="370.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">drift, section</text>
+<text x="1525.0" y="385.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">forces</text>
+<rect x="180" y="110" width="170" height="100" rx="9" fill="#fff8eb" stroke="#b45309" stroke-width="1.6"/>
+<circle cx="195.0" cy="124.0" r="4.2" fill="#b45309"/>
+<path d="M 187.5 139.0 C 187.5 128.5 202.5 128.5 202.5 139.0 Z" fill="#b45309"/>
+<text x="265.0" y="141.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Abaqus/Viewer</text>
+<text x="265.0" y="157.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">the engineer sets up</text>
+<text x="265.0" y="172.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">each picture</text>
+<text x="265.0" y="186.4" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">(one ODB open)</text>
+<path d="M 180 270 H 350 V 363.0 Q 307.5 351.8 265.0 363.0 T 180 363.0 Z" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="265.0" y="308.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">ODB files</text>
+<text x="265.0" y="323.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">one per job</text>
+<text x="265.0" y="337.9" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">SHEAR_…, BEND_…</text>
+<rect x="400" y="110" width="260" height="100" rx="9" fill="#fff8eb" stroke="#b45309" stroke-width="1.6"/>
+<rect x="440.5" y="127.5" width="26.2" height="19" rx="9.5" fill="#b45309"/><text x="453.6" y="141.1" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.0" font-weight="bold" fill="#ffffff" text-anchor="middle">2a</text>
+<text x="473.8" y="141.3" font-family="Consolas, 'Courier New', monospace" font-size="12.0" font-weight="bold" fill="#b45309" text-anchor="start">A_2_Image_save_view.py</text>
+<text x="530.0" y="158.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Define the pictures</text>
+<text x="530.0" y="173.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">view, variable, frames,</text>
+<text x="530.0" y="188.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">contour limits, curves</text>
+<rect x="400" y="430" width="260" height="100" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+<rect x="456.7" y="447.5" width="20.4" height="19" rx="9.5" fill="#1d4ed8"/><text x="466.9" y="461.1" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.0" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+<text x="484.1" y="461.3" font-family="Consolas, 'Courier New', monospace" font-size="12.0" font-weight="bold" fill="#1d4ed8" text-anchor="start">A_1_Export_Auto.py</text>
+<text x="530.0" y="478.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Section export</text>
+<text x="530.0" y="493.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">displacements, rotations and</text>
+<text x="530.0" y="508.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">forces of every SET and frame</text>
+<path d="M 710 110 H 910 V 203.0 Q 860.0 191.8 810.0 203.0 T 710 203.0 Z" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="810.0" y="140.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Image settings</text>
+<text x="810.0" y="155.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">2_Image_export_settings.json</text>
+<text x="810.0" y="170.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">views, variables, frames,</text>
+<text x="810.0" y="185.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">contour limits, curves</text>
+<path d="M 710 439.0 A 100.0 9.0 0 0 1 910 439.0 V 521.0 A 100.0 9.0 0 0 1 710 521.0 Z" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+<ellipse cx="810.0" cy="439.0" rx="100.0" ry="9.0" fill="#e2e8f0" stroke="#475569" stroke-width="1.5"/>
+<text x="810.0" y="476.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Results database</text>
+<text x="810.0" y="491.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">Panel_results/&lt;SET&gt;/&lt;JOB&gt;/</text>
+<text x="810.0" y="505.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">Section_data….txt</text>
+<rect x="960" y="110" width="220" height="260" rx="9" fill="#ecfdf5" stroke="#047857" stroke-width="1.6"/>
+<rect x="973.4" y="179.0" width="27.2" height="19" rx="9.5" fill="#047857"/><text x="987.0" y="192.6" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.0" font-weight="bold" fill="#ffffff" text-anchor="middle">2b</text>
+<text x="1007.6" y="192.8" font-family="Consolas, 'Courier New', monospace" font-size="12.0" font-weight="bold" fill="#047857" text-anchor="start">A_2_Image_export_Auto.py</text>
+<text x="1070.0" y="209.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Image &amp; curve export</text>
+<text x="1070.0" y="231.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">every job × view ×</text>
+<text x="1070.0" y="246.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">variable × frame</text>
+<text x="1070.0" y="267.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">curves from the results</text>
+<text x="1070.0" y="282.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">database, image frames</text>
+<text x="1070.0" y="297.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">marked on them</text>
+<path d="M 1230 110 H 1430 V 203.0 Q 1380.0 191.8 1330.0 203.0 T 1230 203.0 Z" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="1330.0" y="141.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Images per frame</text>
+<text x="1330.0" y="156.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">Panel_images/&lt;JOB&gt;/</text>
+<text x="1330.0" y="170.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">&lt;variable&gt;/&lt;view&gt;/</text>
+<text x="1330.0" y="184.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">f0012_t1.2.png</text>
+<path d="M 1230 270 H 1430 V 363.0 Q 1380.0 351.8 1330.0 363.0 T 1230 363.0 Z" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="1330.0" y="308.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Pushover curves</text>
+<text x="1330.0" y="322.9" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">_curve_&lt;name&gt;.png, .csv</text>
+<text x="1330.0" y="337.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">image frames marked</text>
+<rect x="351.5" y="139.5" width="47.0" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="375.0" y="151.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">live view</text>
+<rect x="377.0" y="392.5" width="33.1" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="381.0" y="404.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="start">reads</text>
+<rect x="539.2" y="299.5" width="101.5" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="590.0" y="311.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">reads every ODB file</text>
+<rect x="667.4" y="139.5" width="35.2" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="685.0" y="151.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">writes</text>
+<rect x="667.4" y="459.5" width="35.2" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="685.0" y="471.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">writes</text>
+<rect x="918.4" y="139.5" width="33.1" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="935.0" y="151.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">reads</text>
+<rect x="904.1" y="379.5" width="71.8" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="940.0" y="391.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">reads (curves)</text>
+<rect x="1108.4" y="459.5" width="163.2" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="1190.0" y="471.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">section histories: Ux … Mz vs time</text>
+<rect x="1190.5" y="139.5" width="29.0" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="1205.0" y="151.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">PNG</text>
+<rect x="30" y="564" width="26" height="16" rx="5" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.5"/>
+<text x="63.0" y="576.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">1  section export</text>
+<rect x="171" y="564" width="26" height="16" rx="5" fill="#fff8eb" stroke="#b45309" stroke-width="1.5"/>
+<text x="204.4" y="576.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">2a  picture definition</text>
+<rect x="333" y="564" width="26" height="16" rx="5" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+<text x="366.4" y="576.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">2b  image &amp; curve export</text>
+<rect x="519" y="564" width="26" height="16" rx="5" fill="#fff8eb" stroke="#b45309" stroke-width="1.5"/>
+<circle cx="532.5" cy="569.5" r="2.6" fill="#b45309"/>
+<path d="M 528.0 578.0 C 528.0 572.5 537.0 572.5 537.0 578.0 Z" fill="#b45309"/>
+<text x="552.5" y="576.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">manual step</text>
+<path d="M 638 563 H 662 V 577 Q 656.5 573.0 650.5 577 T 638 577 Z" fill="#fff" stroke="#475569" stroke-width="1.4"/>
+<text x="669.5" y="576.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">file / folder</text>
+<path d="M 749 566 A 12 4 0 0 1 773 566 V 578 A 12 4 0 0 1 749 578 Z" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<ellipse cx="761" cy="566" rx="12" ry="4" fill="#e2e8f0" stroke="#475569" stroke-width="1.4"/>
+<text x="780.3" y="576.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">results database</text>
+<rect x="886" y="564" width="26" height="16" rx="5" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="919.1" y="576.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">link to the rest of the seismic analysis</text>
+<text x="30.0" y="598.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="start">Order: 1 and 2a in any order (the curve lists of 2a come from the results database of 1), then 2b.</text>
+</svg>
+<figcaption>Figure 1 – The module in the seismic analysis. ODB files from the analyses go in; the results
+database (section histories), images per frame and pushover curves come out. Scripts 1 and 2a can run in either
+order; 2b uses what both of them stored.</figcaption></figure><p class="links">Open separately: <a href="Flowchart_postprocessing_overview.svg">SVG</a> · <a href="Flowchart_postprocessing_overview.png">PNG</a> · <a href="Flowchart_postprocessing_overview.pdf">PDF</a> · editable: <a href="Flowchart_postprocessing.vsdx">Visio</a>, <a href="Flowchart_postprocessing.drawio">draw.io</a></p>
+<div class="cards">
+<div class="card"><h3>Goes in</h3><p>ODB files from the Abaqus analyses (one per job, Standard or Explicit), with the
+cross-sections defined as node and element SETs named <code>TYPE&amp;LABEL&amp;INDEX&amp;ANGLE</code>; for 2a one
+ODB opened in Abaqus/Viewer.</p></div>
+<div class="card"><h3>Happens</h3><p><span class="b b1">1</span> displacements, rotations and forces of every section
+and frame; <span class="b b2a">2a</span> pictures defined once, interactively; <span class="b b2b">2b</span> every
+picture printed for every job and frame, curves drawn.</p></div>
+<div class="card"><h3>Comes out</h3><p>Section histories (Ux, Uy, Uz, fix, fiy, fiz, Fx, Fy, Fz, Mx, My, Mz vs time)
+per SET and job; PNG images per job, variable, view and frame; pushover curves (PNG + CSV) with the image frames
+marked.</p></div>
+</div>
+</section>
+<section class="page detail">
+<h2>Detailed flow</h2>
+<figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1650 880" role="img" aria-label="Step-by-step flow of the three A_ scripts: A_2_Image_save_view defines the pictures, A_1_Export_Auto exports section displacements and forces, A_2_Image_export_Auto prints the images and draws the curves."><title>Post-processing with the A_ scripts — detailed flow</title><desc>Step-by-step flow of the three A_ scripts: A_2_Image_save_view defines the pictures, A_1_Export_Auto exports section displacements and forces, A_2_Image_export_Auto prints the images and draws the curves.</desc><defs>
+<marker id="ah047857" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7.5" markerHeight="7.5" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0.6 L 10 5 L 0 9.4 Z" fill="#047857"/></marker>
+<marker id="ah1d4ed8" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7.5" markerHeight="7.5" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0.6 L 10 5 L 0 9.4 Z" fill="#1d4ed8"/></marker>
+<marker id="ah334155" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7.5" markerHeight="7.5" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0.6 L 10 5 L 0 9.4 Z" fill="#334155"/></marker>
+<marker id="ahb45309" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7.5" markerHeight="7.5" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0.6 L 10 5 L 0 9.4 Z" fill="#b45309"/></marker>
+</defs>
+<rect x="0" y="0" width="1650" height="880" fill="#ffffff"/>
+<text x="30.0" y="42.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif"  font-weight="bold" fill="#0f172a" text-anchor="start" font-size="20">Post-processing with the A_ scripts — detailed flow</text>
+<text x="30.0" y="66.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#64748b" text-anchor="start">what each script does, step by step, and which data it reads and writes</text>
+<rect x="240" y="90" width="660" height="200" rx="14" fill="#fffcf5" stroke="#f5d29a" stroke-width="1.3"/>
+<rect x="254.0" y="102.0" width="26.2" height="19" rx="9.5" fill="#b45309"/><text x="267.1" y="115.6" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.0" font-weight="bold" fill="#ffffff" text-anchor="middle">2a</text>
+<text x="289.2" y="116.5" font-family="Consolas, 'Courier New', monospace" font-size="12.0" font-weight="bold" fill="#b45309" text-anchor="start">A_2_Image_save_view.py</text>
+<text x="445.0" y="116.5" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="start">—  define the pictures</text>
+<text x="254.0" y="140.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="start">interactive in Abaqus/Viewer: File &gt; Run Script, or Plug-ins &gt; Image export &gt; Save current view — once per picture</text>
+<rect x="240" y="360" width="660" height="370" rx="14" fill="#f6f9ff" stroke="#bfd3fb" stroke-width="1.3"/>
+<rect x="254.0" y="372.0" width="20.4" height="19" rx="9.5" fill="#1d4ed8"/><text x="264.2" y="385.6" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.0" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+<text x="283.4" y="386.5" font-family="Consolas, 'Courier New', monospace" font-size="12.0" font-weight="bold" fill="#1d4ed8" text-anchor="start">A_1_Export_Auto.py</text>
+<text x="412.6" y="386.5" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="start">—  section displacements and forces</text>
+<text x="254.0" y="410.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="start">File &gt; Run Script, or  abaqus cae noGUI=A_1_Export_Auto.py;  progress in 1_Export_Auto_log.txt</text>
+<rect x="1170" y="90" width="250" height="705" rx="14" fill="#f6fdf9" stroke="#a3e6c9" stroke-width="1.3"/>
+<rect x="1184.0" y="102.0" width="27.2" height="19" rx="9.5" fill="#047857"/><text x="1197.6" y="115.6" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.0" font-weight="bold" fill="#ffffff" text-anchor="middle">2b</text>
+<text x="1220.2" y="116.5" font-family="Consolas, 'Courier New', monospace" font-size="12.0" font-weight="bold" fill="#047857" text-anchor="start">A_2_Image_export_Auto.py</text>
+<text x="1184.0" y="140.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="start">images and curves, every job</text>
+<path d="M 200.0 206.0 L 250.0 206.0" fill="none" stroke="#b45309" stroke-width="1.6" marker-end="url(#ahb45309)"/>
+<path d="M 398.0 206.0 L 414.0 206.0" fill="none" stroke="#b45309" stroke-width="1.6" marker-end="url(#ahb45309)"/>
+<path d="M 562.0 206.0 L 578.0 206.0" fill="none" stroke="#b45309" stroke-width="1.6" marker-end="url(#ahb45309)"/>
+<path d="M 726.0 206.0 L 742.0 206.0" fill="none" stroke="#b45309" stroke-width="1.6" marker-end="url(#ahb45309)"/>
+<path d="M 890.0 206.0 L 940.0 206.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 200.0 321.0 L 213.0 321.0 Q 220.0 321.0 220.0 328.0 L 220.0 473.0 Q 220.0 480.0 227.0 480.0 L 250.0 480.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 450.0 480.0 L 470.0 480.0" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#ah1d4ed8)"/>
+<path d="M 670.0 480.0 L 690.0 480.0" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#ah1d4ed8)"/>
+<path d="M 790.0 540.0 L 790.0 563.0 Q 790.0 570.0 783.0 570.0 L 357.0 570.0 Q 350.0 570.0 350.0 577.0 L 350.0 600.0" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#ah1d4ed8)"/>
+<path d="M 450.0 660.0 L 470.0 660.0" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#ah1d4ed8)"/>
+<path d="M 670.0 660.0 L 690.0 660.0" fill="none" stroke="#1d4ed8" stroke-width="1.6" marker-end="url(#ah1d4ed8)"/>
+<path d="M 890.0 660.0 L 940.0 660.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 1130.0 205.0 L 1185.0 205.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 200.0 321.0 L 1185.0 321.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 1130.0 660.0 L 1185.0 660.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 1295.0 250.0 L 1295.0 281.0" fill="none" stroke="#047857" stroke-width="1.6" marker-end="url(#ah047857)"/>
+<path d="M 1295.0 361.0 L 1295.0 395.0" fill="none" stroke="#047857" stroke-width="1.6" marker-end="url(#ah047857)"/>
+<path d="M 1295.0 545.0 L 1295.0 615.0" fill="none" stroke="#047857" stroke-width="1.6" marker-end="url(#ah047857)"/>
+<path d="M 1295.0 705.0 L 1295.0 730.0" fill="none" stroke="#047857" stroke-width="1.6" marker-end="url(#ah047857)"/>
+<path d="M 1405.0 470.0 L 1460.0 470.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 1405.0 660.0 L 1460.0 660.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<path d="M 1405.0 755.0 L 1460.0 755.0" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#ah334155)"/>
+<circle cx="220.0" cy="321.0" r="3.6" fill="#334155"/>
+<rect x="30" y="150" width="170" height="112" rx="9" fill="#fff8eb" stroke="#b45309" stroke-width="1.6"/>
+<circle cx="45.0" cy="164.0" r="4.2" fill="#b45309"/>
+<path d="M 37.5 179.0 C 37.5 168.5 52.5 168.5 52.5 179.0 Z" fill="#b45309"/>
+<text x="115.0" y="187.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Abaqus/Viewer</text>
+<text x="115.0" y="202.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">one ODB open; the</text>
+<text x="115.0" y="217.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">engineer sets up</text>
+<text x="115.0" y="232.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">each picture</text>
+<path d="M 30 281 H 200 V 354.0 Q 157.5 342.8 115.0 354.0 T 30 354.0 Z" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="115.0" y="309.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">ODB files</text>
+<text x="115.0" y="324.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">one per job</text>
+<text x="115.0" y="338.9" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">(from the analyses)</text>
+<rect x="250" y="150" width="148" height="112" rx="9" fill="#fff8eb" stroke="#b45309" stroke-width="1.6"/>
+<text x="324.0" y="180.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Set up the picture</text>
+<text x="324.0" y="196.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">camera, section cut</text>
+<text x="324.0" y="211.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">display group</text>
+<text x="324.0" y="226.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">contour type &amp; limits</text>
+<text x="324.0" y="241.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">edges, legend, variable</text>
+<rect x="414" y="150" width="148" height="112" rx="9" fill="#fff8eb" stroke="#b45309" stroke-width="1.6"/>
+<text x="488.0" y="181.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Run the script</text>
+<text x="488.0" y="195.9" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">view__variable</text>
+<text x="488.0" y="210.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">frames of the view</text>
+<text x="488.0" y="225.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">contour limits</text>
+<text x="488.0" y="240.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">curves: edit / on / off</text>
+<rect x="578" y="150" width="148" height="112" rx="9" fill="#fff8eb" stroke="#b45309" stroke-width="1.6"/>
+<text x="652.0" y="180.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Snapshot</text>
+<text x="652.0" y="196.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">read from the live</text>
+<text x="652.0" y="211.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">session; display group</text>
+<text x="652.0" y="226.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">from abaqus.rpy;</text>
+<text x="652.0" y="241.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">checked in Abaqus</text>
+<rect x="742" y="150" width="148" height="112" rx="9" fill="#fff8eb" stroke="#b45309" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="816.0" y="181.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Curve dialog</text>
+<text x="816.0" y="196.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">sections, variables</text>
+<text x="816.0" y="210.9" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">(from results database)</text>
+<text x="816.0" y="225.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">A−B, A+B, A×B, A÷B</text>
+<text x="816.0" y="240.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">factor, label, jobs</text>
+<text x="882.0" y="163.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="end" font-style="italic">optional</text>
+<rect x="250" y="420" width="200" height="120" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+<text x="350.0" y="455.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Settings</text>
+<text x="350.0" y="470.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">dialog, or remembered in</text>
+<text x="350.0" y="484.9" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">1_Export_Auto_settings.json</text>
+<text x="350.0" y="499.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">ODB files, step, database,</text>
+<text x="350.0" y="514.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">SET filter, methods</text>
+<rect x="470" y="420" width="200" height="120" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+<text x="570.0" y="454.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Each ODB</text>
+<text x="570.0" y="470.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">opened (or reused if open)</text>
+<text x="570.0" y="485.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">Implicit / Explicit detected</text>
+<text x="570.0" y="500.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">last step (or chosen)</text>
+<text x="570.0" y="515.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">frames: all, or Δt ≥ minimum</text>
+<rect x="690" y="420" width="200" height="120" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+<text x="790.0" y="455.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Each SET</text>
+<text x="790.0" y="469.9" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">TYPE&amp;LABEL&amp;INDEX&amp;ANGLE</text>
+<text x="790.0" y="484.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">→ volume, shell or point</text>
+<text x="790.0" y="499.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">section (V_PIER, S_PIER …)</text>
+<text x="790.0" y="514.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">exported before → skipped</text>
+<rect x="250" y="600" width="200" height="120" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+<text x="350.0" y="635.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Displacements, rotations</text>
+<text x="350.0" y="650.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">in section axes:</text>
+<text x="350.0" y="665.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">rigid-body fit | angle | slope</text>
+<text x="350.0" y="679.9" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">Ux Uy Uz   fix fiy fiz</text>
+<text x="350.0" y="694.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">relative or absolute</text>
+<rect x="470" y="600" width="200" height="120" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+<text x="570.0" y="635.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Forces</text>
+<text x="570.0" y="651.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">in the section csys:</text>
+<text x="570.0" y="666.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">free-body cut | NFORC sum</text>
+<text x="570.0" y="680.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">Fx Fy Fz   Mx My Mz</text>
+<text x="570.0" y="694.4" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">(NFORC: area-weighted centre)</text>
+<rect x="690" y="600" width="200" height="120" rx="9" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.6"/>
+<text x="790.0" y="634.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Write the table</text>
+<text x="790.0" y="650.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">rows matched by</text>
+<text x="790.0" y="665.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">frame position (index)</text>
+<text x="790.0" y="680.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">one table per SET &amp; job</text>
+<text x="790.0" y="695.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">centre, size, .inp copy</text>
+<path d="M 940 150 H 1130 V 261.0 Q 1082.5 249.8 1035.0 261.0 T 940 261.0 Z" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="1035.0" y="182.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Image settings</text>
+<text x="1035.0" y="197.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">2_Image_export_settings.json</text>
+<text x="1035.0" y="212.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">views, variables, frames,</text>
+<text x="1035.0" y="227.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">contour limits, curves</text>
+<text x="1035.0" y="241.4" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">+ preview PNGs</text>
+<path d="M 940 605.0 A 95.0 9.0 0 0 1 1130 605.0 V 715.0 A 95.0 9.0 0 0 1 940 715.0 Z" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+<ellipse cx="1035.0" cy="605.0" rx="95.0" ry="9.0" fill="#e2e8f0" stroke="#475569" stroke-width="1.5"/>
+<text x="1035.0" y="642.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Results database</text>
+<text x="1035.0" y="657.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">Panel_results/</text>
+<text x="1035.0" y="671.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">&lt;SET&gt;/&lt;JOB&gt;/</text>
+<text x="1035.0" y="685.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">Section_data….txt</text>
+<text x="1035.0" y="699.4" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">+ Attributes.json, .inp</text>
+<rect x="1185" y="160" width="220" height="90" rx="9" fill="#ecfdf5" stroke="#047857" stroke-width="1.6"/>
+<text x="1295.0" y="194.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Load the settings</text>
+<text x="1295.0" y="210.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">latest change wins;</text>
+<text x="1295.0" y="225.2" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">frames &amp; limits checked</text>
+<rect x="1185" y="281" width="220" height="80" rx="9" fill="#ecfdf5" stroke="#047857" stroke-width="1.6"/>
+<text x="1295.0" y="311.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Each ODB</text>
+<text x="1295.0" y="326.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">frames per view</text>
+<text x="1295.0" y="340.9" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="middle">(+ frames around the peak)</text>
+<rect x="1185" y="395" width="220" height="150" rx="9" fill="#ecfdf5" stroke="#047857" stroke-width="1.6"/>
+<text x="1295.0" y="437.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Each frame × variable × view</text>
+<text x="1295.0" y="452.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">start values restored</text>
+<text x="1295.0" y="467.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">view replayed: camera,</text>
+<text x="1295.0" y="482.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">cuts, display group</text>
+<text x="1295.0" y="497.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">variable + contour limits</text>
+<text x="1295.0" y="512.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">PNG printed</text>
+<rect x="1185" y="615" width="220" height="90" rx="9" fill="#ecfdf5" stroke="#047857" stroke-width="1.6"/>
+<text x="1295.0" y="642.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Curves</text>
+<text x="1295.0" y="657.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">results database read</text>
+<text x="1295.0" y="672.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">X, Y of the sections</text>
+<text x="1295.0" y="687.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">image frames marked</text>
+<rect x="1185" y="730" width="220" height="50" rx="9" fill="#ecfdf5" stroke="#047857" stroke-width="1.6"/>
+<text x="1295.0" y="752.3" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Finish</text>
+<text x="1295.0" y="767.7" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#334155" text-anchor="middle">optional ZIP per job</text>
+<path d="M 1460 418 H 1620 V 515.0 Q 1580.0 503.8 1540.0 515.0 T 1460 515.0 Z" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="1540.0" y="451.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Images</text>
+<text x="1540.0" y="466.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">Panel_images/</text>
+<text x="1540.0" y="480.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">&lt;JOB&gt;/&lt;var&gt;/&lt;view&gt;/</text>
+<text x="1540.0" y="494.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">f0012_t1.2.png</text>
+<path d="M 1460 615 H 1620 V 698.0 Q 1580.0 686.8 1540.0 698.0 T 1460 698.0 Z" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="1540.0" y="648.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Curves</text>
+<text x="1540.0" y="663.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">_curve_&lt;name&gt;.png</text>
+<text x="1540.0" y="677.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">_curve_&lt;name&gt;.csv</text>
+<path d="M 1460 723 H 1620 V 780.0 Q 1580.0 768.8 1540.0 780.0 T 1460 780.0 Z" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="1540.0" y="750.8" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="13.0" font-weight="bold" fill="#0f172a" text-anchor="middle">Log</text>
+<text x="1540.0" y="765.4" font-family="Consolas, 'Courier New', monospace" font-size="10.5" fill="#334155" text-anchor="middle">2_Image_export_log.txt</text>
+<rect x="201.5" y="185.5" width="47.0" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="225.0" y="197.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">live view</text>
+<rect x="901.4" y="185.5" width="35.2" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="919.0" y="197.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">writes</text>
+<rect x="901.4" y="639.5" width="35.2" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="919.0" y="651.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">writes</text>
+<rect x="1140.4" y="184.5" width="33.1" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="1157.0" y="196.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">reads</text>
+<rect x="529.2" y="300.5" width="101.5" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="580.0" y="312.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">reads every ODB file</text>
+<rect x="1140.4" y="639.5" width="33.1" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="1157.0" y="651.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">reads</text>
+<rect x="1417.5" y="449.5" width="29.0" height="15" rx="3" fill="#ffffff" fill-opacity="0.94"/><text x="1432.0" y="461.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#475569" text-anchor="middle">PNG</text>
+<rect x="30" y="804" width="26" height="16" rx="5" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.5"/>
+<text x="63.0" y="816.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">1  section export</text>
+<rect x="171" y="804" width="26" height="16" rx="5" fill="#fff8eb" stroke="#b45309" stroke-width="1.5"/>
+<text x="204.4" y="816.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">2a  picture definition</text>
+<rect x="333" y="804" width="26" height="16" rx="5" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+<text x="366.4" y="816.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">2b  image &amp; curve export</text>
+<rect x="519" y="804" width="26" height="16" rx="5" fill="#fff8eb" stroke="#b45309" stroke-width="1.5"/>
+<circle cx="532.5" cy="809.5" r="2.6" fill="#b45309"/>
+<path d="M 528.0 818.0 C 528.0 812.5 537.0 812.5 537.0 818.0 Z" fill="#b45309"/>
+<text x="552.5" y="816.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">manual step</text>
+<path d="M 638 803 H 662 V 817 Q 656.5 813.0 650.5 817 T 638 817 Z" fill="#fff" stroke="#475569" stroke-width="1.4"/>
+<text x="669.5" y="816.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">file / folder</text>
+<path d="M 749 806 A 12 4 0 0 1 773 806 V 818 A 12 4 0 0 1 749 818 Z" fill="#f1f5f9" stroke="#475569" stroke-width="1.4"/>
+<ellipse cx="761" cy="806" rx="12" ry="4" fill="#e2e8f0" stroke="#475569" stroke-width="1.4"/>
+<text x="780.3" y="816.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">results database</text>
+<rect x="886" y="804" width="26" height="16" rx="5" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="919.1" y="816.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="11.5" fill="#475569" text-anchor="start">optional step</text>
+<text x="30.0" y="838.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="start">Alternatives to 2a: MODE = "capture" in A_2_Image_export_Auto.py (pictures printed in Abaqus, read from abaqus.rpy), or VIEWS / VARIABLES edited in the script.</text>
+<text x="30.0" y="854.0" font-family="'Segoe UI', Arial, Helvetica, sans-serif" font-size="10.5" fill="#64748b" text-anchor="start">Order: 1 → 2a → 2b.  2a needs 1 only for the curve lists; 2b needs the settings of 2a and, for the curves, the results database of 1.</text>
+</svg>
+<figcaption>Figure 2 – What each script does. Coloured arrows are the steps inside a script; dark
+arrows are data read from or written to files. A dashed box is optional.</figcaption></figure><p class="links">Open separately: <a href="Flowchart_postprocessing_detailed.svg">SVG</a> · <a href="Flowchart_postprocessing_detailed.png">PNG</a> · <a href="Flowchart_postprocessing_detailed.pdf">PDF</a> · editable: <a href="Flowchart_postprocessing.vsdx">Visio</a>, <a href="Flowchart_postprocessing.drawio">draw.io</a></p>
+</section>
+<section class="page">
+<h2>The three scripts</h2>
+<table><thead><tr><th style="width:4%"></th><th style="width:21%">Script / how to run</th><th style="width:20%">Reads</th>
+<th style="width:34%">Does</th><th style="width:21%">Writes</th></tr></thead><tbody><tr><td><span class='b b1'>1</span></td><td><b class='mono'>A_1_Export_Auto.py</b><br>File &gt; Run Script (or <code>abaqus cae noGUI=A_1_Export_Auto.py</code>); settings dialog first</td><td>ODB files of the folder; <code>1_Export_Auto_settings.json</code> (last settings)</td><td>Per ODB: Implicit/Explicit detected, last step, frames (all, or a minimum time step). Per cross-section SET: section type from the name; displacements and rotations in the section axes (rigid-body fit, angle or slope; relative or absolute); forces in the section csys (Abaqus free-body cut or NFORC summation); rows matched by frame position.</td><td><code>Panel_results/&lt;SET&gt;/&lt;JOB&gt;/Section_data….txt</code>, <code>Attributes.json</code>, <code>.inp</code> copy, job list; settings and log file</td></tr><tr><td><span class='b b2a'>2a</span></td><td><b class='mono'>A_2_Image_save_view.py</b><br>in Abaqus/Viewer with the picture set up: File &gt; Run Script, or Plug-ins &gt; Image export &gt; Save current view</td><td>the live Viewer session; <code>abaqus.rpy</code> (display group); results database (curve lists)</td><td>Snapshot of the picture: camera, section cuts, display group, contour type and limits, edges, legend, variable. Frames and contour limits per view; curve definitions (section variables, A−B, A+B, A×B, A÷B, factor) in a dialog with drop-down lists.</td><td><code>2_Image_export_settings.json</code>; previews in <code>Panel_images/_view_previews</code></td></tr><tr><td><span class='b b2b'>2b</span></td><td><b class='mono'>A_2_Image_export_Auto.py</b><br>File &gt; Run Script (MODE = "export")</td><td>ODB files; <code>2_Image_export_settings.json</code>; results database (curves)</td><td>Per ODB: frames per view (evenly spread, all, every n-th, frame numbers, times; optionally frames around the peak). Per frame × variable × view: start values restored, view replayed, variable and contour limits set, PNG printed. Curves of the job with the image frames marked. Optional ZIP per job.</td><td><code>Panel_images/&lt;JOB&gt;/&lt;variable&gt;/&lt;view&gt;/f0012_t1.2.png</code>, <code>_curve_&lt;name&gt;.png / .csv</code>; settings and log file</td></tr></tbody></table>
+<div class="two" style="margin-top:18px">
+<div><h2 style="margin-top:0">Output folders</h2><pre>Panel_results/                         results database  (A_1_Export_Auto.py)
+  baza sadzaj liste.txt                SET names and exported jobs
+  &lt;SET&gt;/Attributes.json                section centre and dimensions
+  &lt;SET&gt;/&lt;JOB&gt;/Section_dataIIII&lt;SET&gt;IIII&lt;JOB&gt;.txt
+        Time, frameId, Ux, Uy, Uz, fix, fiy, fiz, Fx, Fy, Fz, Mx, My, Mz
+  &lt;SET&gt;/&lt;JOB&gt;/&lt;job&gt;.inp                copy of the input file
+
+Panel_images/                          images  (A_2_Image_export_Auto.py)
+  &lt;JOB&gt;/&lt;variable&gt;/&lt;view&gt;/f0012_t1.2.png      frame 12, step time 1.2
+  &lt;JOB&gt;/_curve_&lt;name&gt;.png  and  .csv          curve, image frames marked
+  _view_previews/                             previews  (A_2_Image_save_view.py)</pre></div>
+<div><h2 style="margin-top:0">Section types (SET names)</h2>
+<table><thead><tr><th>TYPE</th><th>geometry</th><th>axes</th><th>forces</th></tr></thead><tbody><tr><td class='mono'>V_PIER, V_SPEC</td><td>volume (solid elements)</td><td>pier</td><td>yes</td></tr><tr><td class='mono'>S_PIER</td><td>shell (line of nodes)</td><td>pier</td><td>yes</td></tr><tr><td class='mono'>V_SPANDREL</td><td>volume</td><td>spandrel</td><td>yes</td></tr><tr><td class='mono'>S_SPANDREL</td><td>shell</td><td>spandrel</td><td>yes</td></tr><tr><td class='mono'>S_DRIFT</td><td>point (nodal average)</td><td>global axes</td><td>no</td></tr><tr><td class='mono'>SRIFT</td><td>volume</td><td>pier</td><td>no</td></tr></tbody></table>
+<p style="font-size:12.5px;margin:8px 0 0">Name: <code>TYPE&amp;LABEL&amp;INDEX&amp;ANGLE</code>, e.g.
+<code>V_PIER&amp;RU&amp;2&amp;0</code>. ANGLE turns the section axes about global Z; INDEX only numbers the
+section.</p></div></div>
+<h2>Using the module in another folder</h2>
+<p class="note">Copy everything whose name starts with <b>A_</b>: <code>A_1_Export_Auto.py</code>,
+<code>A_2_Image_export_Auto.py</code>, <code>A_2_Image_save_view.py</code> and the folder
+<code>A_IMPORT_additional_functions</code>. Optionally the two <code>*_settings.json</code> files, to keep the saved
+settings (views, limits, curves). Order: 1 → 2a → 2b; 1 and 2b run unattended over all ODB files of the
+folder.</p>
+<footer>Generated 10 November 2026 from the scripts in 3_export_and_image_export. Versions of this flowchart: HTML, PDF report, SVG / PNG / PDF per
+figure, Visio and draw.io (editable).</footer>
+</section>
+</main></body></html>
