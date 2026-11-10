@@ -1,0 +1,3 @@
+# name	E	v	s_max	e_smax	e_u	(not used)	Sigma_T	GFI   (tab separated, example values)
+	Example_EC_C20	30000	0.2	20	0.002	0.0035	0.06	2.0	0.1
+	Example_EC_C30	33000	0.2	30	0.0022	0.0035	0.07	2.9	0.13
