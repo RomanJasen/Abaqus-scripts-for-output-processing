@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+
+# Abaqus files and results (keep them out of the repository)
+*.odb
+*.cae
+*.jnl
+*.rpy
+*.rpy.*
+*.rec
+*.lck
+*.inp
+*.msg
+*.sta
+*.dat
+*.com
+*.prt
+*.sim
+*.mdl
+*.stt
+*.res
+*.abq
+*.pac
+*.sel
+*.023
+*.ipm
+*.log
+
+# outputs and remembered settings of the scripts
+Panel_results/
+Panel_images/
+*_log.txt
+*_settings.json
