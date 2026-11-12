@@ -229,6 +229,14 @@ def export_odb(odb_path, cfg, report):
                 ref, disp_rows = displacements[name]
                 force_rows = None
                 if section.type.forces:
+                    try:
+                        warning = section_forces.both_sides_warning(odb, section)
+                    except Exception as e:          # the check must never stop the export
+                        warning = ""
+                        log("  (side check of %s not possible: %s)" % (name, e))
+                    if warning:
+                        log("  WARNING %s: %s" % (name, warning))
+                        report["warnings"].append((job, name))
                     log("  forces %s (%s) ..." % (name, cfg["FORCES"]["METHOD"]))
                     t1 = time.time()
                     force_rows = section_forces.extract_section_forces(
@@ -262,7 +270,7 @@ def run(cfg):
     log("Kinematics : %s   |   Forces: %s" % (cfg["KINEMATICS"], cfg["FORCES"]))
     log("=" * 78)
 
-    report = {"exported": [], "failed": []}
+    report = {"exported": [], "failed": [], "warnings": []}
     t0 = time.time()
     for i, name in enumerate(cfg["ODB_NAMES"]):
         path = os.path.join(cfg["ODB_FOLDER"], name)
@@ -281,7 +289,20 @@ def run(cfg):
         (time.time() - t0) / 60.0, len(report["exported"]), len(report["failed"])))
     for f in report["failed"]:
         log("  FAILED %s / %s: %s" % f)
+    for line in both_sides_summary(report):
+        log(line)
     return report
+
+
+def both_sides_summary(report):
+    """Lines about the SETs whose element set has elements on both sides of the cut."""
+    names = sorted(set(name for _, name in report.get("warnings", [])))
+    if not names:
+        return []
+    return ["WARNING: %d SET(s) have elements on BOTH sides of the cut - their exported forces are wrong "
+            "(about zero), the displacements are correct:" % len(names),
+            "  " + ", ".join(names),
+            "  Fix the element sets (elements of one side only, see 1_model_preparation/README.md)."]
 
 
 def known_steps():
@@ -311,7 +332,15 @@ def main():
             log("Settings dialog closed.")
         cfg = resolve_config(cfg)
         remember(cfg)  # before the export, so an interrupted export is remembered too
-        run(cfg)
+        report = run(cfg)
+        lines = both_sides_summary(report)
+        if lines and USE_GUI:
+            try:                                    # also as a message box: the log is easy to miss
+                from abaqus import getWarningReply
+                from abaqusConstants import YES
+                getWarningReply("\n".join(["Export done."] + lines + ["", "Details: %s" % LOG_FILE_NAME]), (YES, ))
+            except Exception:
+                pass
     except Exception:
         log("EXPORT STOPPED BY AN ERROR:\n" + traceback.format_exc())
         raise

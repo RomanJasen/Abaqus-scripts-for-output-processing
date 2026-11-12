@@ -23,6 +23,8 @@ SET (see `1_model_preparation`):
 
 A settings dialog asks for the ODB files, step, database folder, SET filter and methods.
 Sections already in the database are skipped (unless *Overwrite*). Progress: `1_Export_Auto_log.txt`.
+SETs whose element set has elements on BOTH sides of the cut (their forces cancel, the exported
+forces are about zero) are reported with a WARNING in the log, a summary at the end and a message box.
 
 Video: [export script](https://youtu.be/nRnF_rlyfsg) (earlier version).
 
