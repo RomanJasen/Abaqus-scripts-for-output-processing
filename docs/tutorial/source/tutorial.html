@@ -278,8 +278,14 @@ for those SETs Fx, Fy, Mx and My have the opposite sign.</span></div>
 
 <h2 id="s1-4">1.4&nbsp;&nbsp;Correct and wrong cuts</h2>
 <p>The element set must contain elements of <b>one side only</b>. If it holds the elements of both sides, the
-forces of the two sides cancel and the section reports nearly zero, without any error message. The displacements of
-such a SET are still correct, because they only use the nodes.</p>
+forces of the two sides cancel and the section reports nearly zero. The displacements of such a SET are still
+correct, because they only use the nodes. Both scripts check this: <code>prepare_model_for_export.py</code> in the
+model before the analyses (1.6), and the export for every SET it exports &ndash; a WARNING line in its log, a summary
+at the end of the log and a message box. For the benchmark:</p>
+<pre>WARNING: 6 SET(s) have elements on BOTH sides of the cut - their exported forces
+         are wrong (about zero), the displacements are correct:
+  V_PIER&amp;DPARC&amp;2&amp;0, V_PIER&amp;GPARC&amp;1&amp;0, V_SPEC&amp;DM&amp;2&amp;0, V_SPEC&amp;DPL&amp;2&amp;0, V_SPEC&amp;GM&amp;1&amp;0, V_SPEC&amp;GPL&amp;1&amp;0
+  Fix the element sets (elements of one side only, see 1_model_preparation/README.md).</pre>
 
 <figure>
   <img src="figures/fig_cut_compare.png" style="width:100%">
@@ -347,7 +353,8 @@ one layer of elements on one side of the cut.</div>
 <p>More output frames give more points on the curves and more frames to choose for the pictures.</p>
 
 <p><code>1_model_preparation/prepare_model_for_export.py</code> (Abaqus/CAE, model database open) lists the
-section SETs of one or all models and checks their names; optionally it sets the variables of the field output
+section SETs of one or all models, checks their names and whether the element set of every SET with forces lies
+on one side of the cut (the model must be meshed); optionally it sets the variables of the field output
 request <code>F-Output-1</code> (<code>FIELD_OUTPUT</code> in its INPUT block) and creates surfaces
 <code>SURF_&lt;SET&gt;</code> for the earlier scripts and videos (not needed by the current export).
 <code>convert_models_to_explicit_EXAMPLE.py</code> is a recorded example of converting the benchmark models to
@@ -564,7 +571,8 @@ step time, <i>frameId</i> the position of the frame in the step.</p>
 <p>Three checks, from quick to thorough:</p>
 <ol>
   <li><b>Equilibrium:</b> the normal force of a horizontal cut through the whole wall equals the vertical load (plus
-      self-weight); top and base shear are equal and opposite (signs, 1.3). Near-zero forces: see 1.4.</li>
+      self-weight); top and base shear are equal and opposite (signs, 1.3). Near-zero forces: see 1.4 (the export
+      warns about SETs with elements on both sides of the cut).</li>
   <li><b>Both methods:</b> export once with <i>freebody</i> and once with <i>nforc</i> into two databases, or run
       <code>section_forces.py</code> of the library on its own with <code>"METHOD": "compare"</code> in its
       <code>DEMO_SETTINGS</code>; it prints both and their differences. Figure 9 shows the result for the example.</li>
@@ -783,7 +791,8 @@ for the whole session. (The scripts only reload library modules that were import
   <tr><th style="width:38%">message or symptom</th><th>cause and remedy</th></tr>
   <tr><td>Folder A_IMPORT_additional_functions not found next to this script</td><td>copy the folder together with the A_ scripts (3.1)</td></tr>
   <tr><td>No .odb files found in ...</td><td>choose the ODB folder in the dialog, or set <code>ODB_FOLDER</code></td></tr>
-  <tr><td>A section has forces near zero</td><td>element set on both sides of the cut (1.4)</td></tr>
+  <tr><td>WARNING ... elements on BOTH sides of the cut, or a section with forces near zero</td><td>the element set
+      holds elements of both sides of the cut: make it again with the elements of one side (1.4, 1.5)</td></tr>
   <tr><td>Forces of two sections have opposite signs</td><td>their element sets lie on different sides of the cut (1.3)</td></tr>
   <tr><td>SET ... must look like TYPE&amp;LABEL&amp;INDEX&amp;ANGLE / INDEX and ANGLE must be numbers</td><td>rename the SET (1.2); helper sets must not contain PIER, SPEC, SPANDREL, DRIFT or SRIFT</td></tr>
   <tr><td>Abaqus seems to hang during an export</td><td>open the <code>*_log.txt</code> file next to the script: it shows the current ODB, SET and frame</td></tr>
