@@ -20,6 +20,28 @@ both with the same name `TYPE&LABEL&INDEX&ANGLE`, e.g. `V_PIER&RU&2&0`:
 Videos: [creation of the benchmark model](https://youtu.be/stwDfm0-Hc0),
 [cross-section naming and local axes](https://youtu.be/6BFI6Eegp64).
 
+**The element set must contain elements of one side only** - with elements of both sides the
+forces cancel and the section reports nearly zero (the displacements are still correct). How to
+make the SETs in Abaqus/CAE (both checked with Abaqus/CAE 2021):
+
+* **cut on the boundary of a part instance** (e.g. between a wall and a beam): *Tools > Set >
+  Create*, type *Geometry*, select the face of the cut. Abaqus stores the nodes of the face and the
+  elements next to it.
+* **cut inside a part** (partition face): a geometry set would get the elements of BOTH sides.
+  Create a node set `cut_nodes` (nodes of the cut) and an element set `cut_elements` (one layer on
+  one side), then combine them in the kernel command line (`>>>` left of the message area):
+
+  ```python
+  a = mdb.models['Model-1'].rootAssembly
+  a.SetByBoolean(name='V_PIER&DPARC&2&0', operation=UNION,
+                 sets=(a.sets['cut_nodes'], a.sets['cut_elements']))
+  ```
+
+Quick check after the export: the normal force Fz of a horizontal cut through the whole wall equals
+the vertical load above it. The forces act on the element set, so a section with its elements below
+the cut and one with its elements above report the same internal force with opposite signs.
+Details and pictures: chapter 1 of the [tutorial](../docs/tutorial).
+
 ## 2. Field output
 
 | variable | needed for |
