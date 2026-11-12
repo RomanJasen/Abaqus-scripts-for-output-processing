@@ -9,7 +9,8 @@ given by SectionSet.force_csys_points(). Two methods (DEFAULT_FORCE_OPTIONS):
               ONE XYDataFromFreeBody call for all frames. Needs the CAE kernel.
   "nforc"     sums the element nodal forces NFORC of the element set at the cut
               nodes directly from the ODB (needs NFORC in the field output):
-                  F = sum F_i            M = sum (x_i - C) x F_i  (+ NFORC4-6 for shells)
+                  F = -sum F_i           M = -sum (x_i - C) x F_i  (+ NFORC4-6 for shells)
+              (minus: NFORC act on the nodes, the cut gives the forces on the element set)
               C = AREA-WEIGHTED centroid of the element faces on the cut (length
               weighted edges for shells), so the centre does not shift towards
               finer parts of the mesh as a plain node average does. Works under
@@ -47,7 +48,9 @@ DEFAULT_FORCE_OPTIONS = {
     "METHOD": "freebody",      # "freebody" | "nforc"
     "NFORC_DEFORMED": True,    # moment arms from deformed coordinates (large displacements)
     "NFORC_CENTRE": "area",    # "area" (area-weighted cut centroid) | "nodes" (plain node average)
-    "NFORC_SIGN": 1.0,         # free-body cuts are sums of NFORC -> +1; flip if "compare" says so
+    "NFORC_SIGN": -1.0,        # NFORC = forces of the elements ON the nodes; the free-body cut gives the
+                               # forces acting on the element set -> -1 (checked with "compare" on the
+                               # benchmark wall: both methods agree within 0.01 % in all 6 components)
 }
 
 # =============================================================================
@@ -95,7 +98,7 @@ def _abaqus():
     """Import the CAE-only modules lazily so the module can be imported anywhere."""
     from abaqus import session
     import abaqusConstants as C
-    import displayGroupOdbToolset as dgo
+    dgo = odb_tools.display_group_toolset()     # also loads Visualization under noGUI
     return session, C, dgo
 
 

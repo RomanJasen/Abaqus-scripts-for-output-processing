@@ -45,7 +45,7 @@ class Replayer(object):
     def __init__(self, strict=False, report=None):
         from abaqus import session
         import abaqusConstants
-        import displayGroupOdbToolset as dgo
+        dgo = odb_tools.display_group_toolset()     # also loads Visualization under noGUI
         self.session = session
         self.ns = dict((k, getattr(abaqusConstants, k)) for k in dir(abaqusConstants) if not k.startswith("_"))
         self.ns["session"] = session

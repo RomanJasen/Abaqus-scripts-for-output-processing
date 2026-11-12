@@ -50,6 +50,19 @@ class FrameSyncError(RuntimeError):
     """Raised when force and displacement data cannot be matched frame by frame."""
 
 
+def display_group_toolset():
+    """displayGroupOdbToolset, with the Visualization module loaded first if needed.
+    In the Abaqus/CAE or Viewer GUI it is loaded already; under  abaqus cae noGUI=...
+    it is not, and without it free-body cuts and pictures of an ODB fail
+    (ImportError, or 'displayedObject; found Odb, expecting StubType ...')."""
+    try:
+        import displayGroupOdbToolset as dgo
+    except ImportError:
+        import visualization  # noqa: F401 - loads the ODB display of the kernel
+        import displayGroupOdbToolset as dgo
+    return dgo
+
+
 # ---------------------------------------------------------------------------
 # Progress messages
 # ---------------------------------------------------------------------------
