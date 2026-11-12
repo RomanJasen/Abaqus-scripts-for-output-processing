@@ -18,7 +18,7 @@ spandrels), usable wherever section forces and displacements are needed.
 
 | Step | Folder | Script(s) | What it does |
 |---|---|---|---|
-| 1 | [`1_model_preparation`](1_model_preparation) | `prepare_model_for_export.py`<br>`convert_models_to_explicit_EXAMPLE.py` | checks the cross-section SETs (names, field output); example of converting models to Abaqus/Explicit |
+| 1 | [`1_model_preparation`](1_model_preparation) | `prepare_model_for_export.py`<br>`convert_models_to_explicit_EXAMPLE.py` | checks the cross-section SETs (names; element sets on one side of the cut); example of converting models to Abaqus/Explicit |
 | 2 | [`2_run_analyses`](2_run_analyses) | `run_pushover_jobs.py`<br>`run_parameter_study.py` (+ `material_CDP`) | A: pushover analyses of the chosen models at every vertical force (dialog: models, analyses at a time, cores per analysis); B: parameter study (contact properties or CDP material); finished analyses are skipped |
 | 3 | [`3_export_and_image_export`](3_export_and_image_export) | `A_1_Export_Auto.py` | displacements, rotations and forces of every cross-section and frame &rarr; results database (text files) |
 | 4 | [`3_export_and_image_export`](3_export_and_image_export) | `A_2_Image_save_view.py`<br>`A_2_Image_export_Auto.py` | define the pictures once in Abaqus/Viewer, then print them for every job and frame; pushover curves with the image frames marked |

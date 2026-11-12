@@ -89,3 +89,6 @@ WHAT CHANGED SINCE THESE TEXTS (November 2026)
   cores per analysis); run_parameter_study.py replaces Automatic_job_running_contact.py and
   "Automatic_job_running - Material testing.py".
 * A written tutorial with pictures: docs/tutorial/Tutorial_Abaqus_scripts_for_output_processing.pdf
+* Check of the cross-section SETs: prepare_model_for_export.py (in the model) and A_1_Export_Auto.py
+  (for every exported SET) warn when an element set has elements on both sides of the cut - their
+  forces cancel and the section forces would be about zero.
