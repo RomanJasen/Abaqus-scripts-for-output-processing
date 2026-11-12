@@ -37,6 +37,8 @@ make the SETs in Abaqus/CAE (both checked with Abaqus/CAE 2021):
                  sets=(a.sets['cut_nodes'], a.sets['cut_elements']))
   ```
 
+`prepare_model_for_export.py` checks this in the meshed model, and the export warns about such SETs
+(WARNING in `1_Export_Auto_log.txt`, a summary at the end and a message box).
 Quick check after the export: the normal force Fz of a horizontal cut through the whole wall equals
 the vertical load above it. The forces act on the element set, so a section with its elements below
 the cut and one with its elements above report the same internal force with opposite signs.
@@ -57,7 +59,7 @@ More output frames = more points on the curves and more frames to choose for the
 
 | script | what it does |
 |---|---|
-| `prepare_model_for_export.py` | lists the section SETs of one or all models and checks their names; optionally creates the surfaces `SURF_<SET>` (used by the earlier scripts and videos, **not needed** by the current export) and sets the variables of the field output request `F-Output-1`. Run in Abaqus/CAE with the .cae open. |
+| `prepare_model_for_export.py` | lists the section SETs of one or all models, checks their names and that every element set with forces lies on one side of the cut (meshed model); optionally creates the surfaces `SURF_<SET>` (used by the earlier scripts and videos, **not needed** by the current export) and sets the variables of the field output request `F-Output-1`. Run in Abaqus/CAE with the .cae open. |
 | `convert_models_to_explicit_EXAMPLE.py` | **example**, recorded on the Zaprudje panel models: explicit steps, explicit element types with element deletion, output requests, load ramps and step times. Part names and masks belong to that model - record the same actions for your model and replace them. |
 
 Both scripts have an INPUT block at the top.
