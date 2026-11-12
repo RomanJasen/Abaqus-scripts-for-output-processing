@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Abaqus scripts for output processing - Tutorial</title>
+<style>
+  @page { size: A4; margin: 17mm 17mm 19mm 17mm; }
+  :root { --blue: #1f4e79; --ink: #1d232a; --muted: #5b6670; --line: #d5dbe1; --accent: #c55a11;
+          --code-bg: #f5f7f9; --note: #eaf2fb; --warn: #fdf3e6; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: "Segoe UI", "Calibri", Arial, sans-serif; font-size: 10pt; line-height: 1.45;
+         color: var(--ink); margin: 0; background: #fff; }
+  h1, h2, h3 { color: var(--blue); line-height: 1.2; break-after: avoid; }
+  h1.chapter { font-size: 21pt; margin: 0 0 4mm 0; padding-bottom: 2.5mm; border-bottom: 2px solid var(--blue);
+               break-before: page; }
+  h1.chapter .num { color: var(--accent); margin-right: 3mm; }
+  h2 { font-size: 13pt; margin: 6mm 0 2mm 0; }
+  h3 { font-size: 11pt; margin: 4mm 0 1.5mm 0; }
+  p { margin: 0 0 2.2mm 0; }
+  ul, ol { margin: 0 0 2.5mm 0; padding-left: 6mm; }
+  li { margin-bottom: 0.8mm; }
+  code, pre, .mono { font-family: Consolas, "Cascadia Mono", "Courier New", monospace; }
+  code { font-size: 9pt; background: var(--code-bg); padding: 0 1mm; border-radius: 2px; white-space: nowrap; }
+  pre { font-size: 8.4pt; line-height: 1.38; background: var(--code-bg); border-left: 3px solid #b6c2cf;
+        padding: 2mm 3mm; margin: 1.5mm 0 3mm 0; white-space: pre-wrap; break-inside: avoid; }
+  pre .c { color: #6a737d; } pre .s { color: #116329; } pre .k { color: #8250df; } pre .h { color: #b35900; font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; margin: 1.5mm 0 3.5mm 0; font-size: 9pt; break-inside: avoid; }
+  th, td { border-bottom: 1px solid var(--line); padding: 1.1mm 1.8mm; vertical-align: top; text-align: left; }
+  th { background: #eef2f6; color: var(--blue); font-weight: 600; border-bottom: 1.5px solid #b8c4d0; }
+  td code { white-space: nowrap; }
+  figure { margin: 2mm 0 4mm 0; break-inside: avoid; text-align: center; }
+  figure img { max-width: 100%; }
+  figcaption { font-size: 8.8pt; color: var(--muted); margin-top: 1.5mm; text-align: left; }
+  figcaption b { color: var(--ink); }
+  .note, .warn, .tip { padding: 2.2mm 3mm; margin: 2mm 0 3.5mm 0; border-radius: 3px; break-inside: avoid; font-size: 9.4pt; }
+  .note { background: var(--note); border-left: 3px solid #4a86c5; }
+  .warn { background: var(--warn); border-left: 3px solid #d68a2e; }
+  .tip  { background: #edf7ef; border-left: 3px solid #4c9a5f; }
+  .note b:first-child, .warn b:first-child, .tip b:first-child { color: var(--blue); }
+  .two { display: flex; gap: 5mm; align-items: flex-start; }
+  .two > * { flex: 1; }
+  .small { font-size: 8.8pt; color: var(--muted); }
+  .keep { break-inside: avoid; }
+  /* cover */
+  .cover { height: 255mm; display: flex; flex-direction: column; }
+  .cover .kicker { color: var(--accent); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+                   font-size: 11pt; margin-top: 18mm; }
+  .cover h1 { font-size: 30pt; margin: 3mm 0 4mm 0; color: var(--blue); border: none; }
+  .cover .sub { font-size: 13pt; color: var(--muted); max-width: 150mm; margin-bottom: 10mm; }
+  .cover img { width: 100%; border: 1px solid var(--line); }
+  .cover .meta { margin-top: auto; font-size: 9.5pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 3mm; }
+  .cover .meta td { border: none; padding: 0.6mm 4mm 0.6mm 0; }
+  /* table of contents */
+  .toc { break-before: page; }
+  .toc h1 { font-size: 21pt; border-bottom: 2px solid var(--blue); padding-bottom: 2.5mm; margin-top: 0; }
+  .toc ol { list-style: none; padding: 0; margin: 0; }
+  .toc li { display: flex; align-items: baseline; margin: 0 0 1.4mm 0; }
+  .toc li.ch { font-weight: 600; font-size: 11pt; margin-top: 3.5mm; color: var(--blue); }
+  .toc li.sec { padding-left: 8mm; font-size: 9.8pt; }
+  .toc li .t { flex: none; }
+  .toc li .dots { flex: 1; border-bottom: 1px dotted #9aa5b1; margin: 0 2mm; transform: translateY(-1mm); }
+  .toc li .p { flex: none; min-width: 6mm; text-align: right; }
+  /* mock-ups of Abaqus' own dialogs */
+  .dlg { border: 1px solid #8a96a3; border-radius: 3px; background: #f3f4f6; max-width: 150mm; margin: 2mm auto 1mm auto;
+         font-size: 8.6pt; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.15); break-inside: avoid; }
+  .dlg .bar { background: linear-gradient(#e7ebf0, #d7dde4); border-bottom: 1px solid #a9b3bd; padding: 1mm 2.5mm;
+              font-weight: 600; color: #2b333b; }
+  .dlg .body { padding: 2mm 3mm 2.5mm 3mm; }
+  .dlg .label { white-space: pre-line; margin-bottom: 2mm; color: #2b333b; }
+  .dlg table { margin: 0; font-size: 8.4pt; }
+  .dlg td { border: none; padding: 0.7mm 1mm; vertical-align: middle; }
+  .dlg td.f { width: 58%; color: #2b333b; }
+  .dlg .entry { display: block; background: #fff; border: 1px solid #9ba6b1; padding: 0.4mm 1.5mm; min-height: 4.4mm;
+                font-family: Consolas, monospace; font-size: 8.2pt; white-space: nowrap; overflow: hidden; }
+  .dlg .buttons { text-align: center; margin-top: 2.5mm; }
+  .dlg .btn { display: inline-block; border: 1px solid #8f9aa5; background: linear-gradient(#fbfbfc, #e4e8ec);
+              padding: 0.5mm 6mm; margin: 0 2mm; border-radius: 2px; }
+  .dlg .msg { white-space: pre-line; font-family: "Segoe UI", Arial, sans-serif; }
+  .shot { border: 1px solid var(--line); }
+  .anatomy { display: flex; justify-content: center; gap: 0; margin: 3mm 0 1mm 0; font-family: Consolas, monospace; }
+  .anatomy div { text-align: center; padding: 0 1mm; }
+  .anatomy .part { font-size: 15pt; font-weight: 600; padding: 1.2mm 3mm; border-radius: 3px; }
+  .anatomy .amp { font-size: 15pt; color: #8a96a3; padding: 1.2mm 0.5mm; }
+  .anatomy .lab { font-family: "Segoe UI", Arial, sans-serif; font-size: 8.4pt; color: var(--muted); margin-top: 1mm; max-width: 38mm; }
+  .p1 { background: #fbe5d6; color: #8a3b07; } .p2 { background: #deebf7; color: #1f4e79; }
+  .p3 { background: #e2f0d9; color: #375623; } .p4 { background: #ede4f5; color: #5b2c86; }
+  .steps { counter-reset: st; list-style: none; padding-left: 0; }
+  .steps > li { counter-increment: st; position: relative; padding-left: 8mm; margin-bottom: 1.6mm; }
+  .steps > li::before { content: counter(st); position: absolute; left: 0; top: 0.2mm; width: 5mm; height: 5mm;
+                        border-radius: 50%; background: var(--blue); color: #fff; font-size: 8pt; text-align: center;
+                        line-height: 5mm; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ============================== COVER ============================== -->
+<section class="cover">
+  <div class="kicker">Tutorial</div>
+  <h1>Abaqus scripts for output processing</h1>
+  <div class="sub">From the model to section forces, pictures and pushover curves: preparing the model,
+    running the analyses, exporting cross-sections, images and curves in Abaqus/CAE and Abaqus/Viewer.</div>
+  <img src="../../flowchart/Flowchart_postprocessing_overview.png" alt="Overview of the post-processing module">
+  <img src="figures/fig_frames.png" alt="Exported pictures of four frames" style="margin-top:5mm; border:none">
+  <table class="meta">
+    <tr><td>Repository</td><td>github.com/RomanJasen/Abaqus-scripts-for-output-processing</td></tr>
+    <tr><td>Scripts</td><td>Abaqus/CAE and Abaqus/Viewer 2021 (Python 2.7), Windows 10</td></tr>
+    <tr><td>Example</td><td>masonry wall benchmark with 16 cross-sections (implicit and explicit pushover analyses)</td></tr>
+    <tr><td>Version</td><td>November 2026</td></tr>
+  </table>
+</section>
+
+<!-- ============================== CONTENTS ============================== -->
+<section class="toc">
+  <h1>Contents</h1>
+  <ol id="toc">
+    <li class="ch" data-target="ch0"><span class="t">0&nbsp;&nbsp;Overview and conventions</span><span class="dots"></span><span class="p"></span></li>
+    <li class="ch" data-target="ch1"><span class="t">1&nbsp;&nbsp;Preparing the model</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s1-1"><span class="t">1.1&nbsp;&nbsp;What a cross-section SET is</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s1-2"><span class="t">1.2&nbsp;&nbsp;Naming: TYPE&amp;LABEL&amp;INDEX&amp;ANGLE</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s1-3"><span class="t">1.3&nbsp;&nbsp;Section axes, components and signs</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s1-4"><span class="t">1.4&nbsp;&nbsp;Correct and wrong cuts</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s1-5"><span class="t">1.5&nbsp;&nbsp;Creating the SETs in Abaqus/CAE</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s1-6"><span class="t">1.6&nbsp;&nbsp;Field output and the check script</span><span class="dots"></span><span class="p"></span></li>
+    <li class="ch" data-target="ch2"><span class="t">2&nbsp;&nbsp;Running the analyses</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s2-1"><span class="t">2.1&nbsp;&nbsp;Workflow A: pushover analyses (run_pushover_jobs.py)</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s2-2"><span class="t">2.2&nbsp;&nbsp;Workflow B: parameter study (run_parameter_study.py)</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s2-3"><span class="t">2.3&nbsp;&nbsp;CDP materials</span><span class="dots"></span><span class="p"></span></li>
+    <li class="ch" data-target="ch3"><span class="t">3&nbsp;&nbsp;Section export (A_1_Export_Auto.py)</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s3-1"><span class="t">3.1&nbsp;&nbsp;Files and the settings dialog</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s3-2"><span class="t">3.2&nbsp;&nbsp;What is computed</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s3-3"><span class="t">3.3&nbsp;&nbsp;The results database</span><span class="dots"></span><span class="p"></span></li>
+    <li class="sec" data-target="s3-4"><span class="t">3.4&nbsp;&nbsp;Checking the results</span><span class="dots"></span><span class="p"></span></li>
+    <li class="ch" data-target="ch4"><span class="t">4&nbsp;&nbsp;Defining pictures (A_2_Image_save_view.py)</span><span class="dots"></span><span class="p"></span></li>
+    <li class="ch" data-target="ch5"><span class="t">5&nbsp;&nbsp;Images and curves (A_2_Image_export_Auto.py)</span><span class="dots"></span><span class="p"></span></li>
+    <li class="ch" data-target="ch6"><span class="t">6&nbsp;&nbsp;Changing the scripts</span><span class="dots"></span><span class="p"></span></li>
+    <li class="ch" data-target="chA"><span class="t">A&nbsp;&nbsp;Troubleshooting</span><span class="dots"></span><span class="p"></span></li>
+    <li class="ch" data-target="chB"><span class="t">B&nbsp;&nbsp;Video tutorials and further reading</span><span class="dots"></span><span class="p"></span></li>
+  </ol>
+</section>
+
+<!-- ============================== 0 OVERVIEW ============================== -->
+<h1 class="chapter" id="ch0"><span class="num">0</span>Overview and conventions</h1>
+
+<p>The scripts automate a numerical (seismic, pushover) analysis of structures modelled with
+<b>volumetric (solid) or shell elements</b> in Abaqus: the model is prepared once, many analyses are run
+automatically, and the forces and displacements of chosen cross-sections, pictures of the results and
+pushover curves are exported for every analysis. They were developed for masonry walls and buildings,
+but work wherever section forces and displacements are needed.</p>
+
+<table>
+  <tr><th style="width:6%">Step</th><th style="width:31%">Folder &rarr; script(s)</th><th>What it does</th></tr>
+  <tr><td>1</td><td><code>1_model_preparation</code><br><code>prepare_model_for_export.py</code></td>
+      <td>checks the cross-section SETs of the model (chapter 1)</td></tr>
+  <tr><td>2</td><td><code>2_run_analyses</code><br><code>run_pushover_jobs.py</code>, <code>run_parameter_study.py</code></td>
+      <td>runs the pushover analyses of the chosen models, or a parameter study (chapter 2)</td></tr>
+  <tr><td>3</td><td><code>3_export_and_image_export</code><br><code>A_1_Export_Auto.py</code></td>
+      <td>displacements, rotations and forces of every cross-section and frame &rarr; results database (chapter 3)</td></tr>
+  <tr><td>4</td><td><code>3_export_and_image_export</code><br><code>A_2_Image_save_view.py</code>, <code>A_2_Image_export_Auto.py</code></td>
+      <td>pictures defined once in Abaqus/Viewer and printed for every analysis and frame; pushover curves with
+      the frames of the pictures marked (chapters 4 and 5)</td></tr>
+</table>
+
+<h3>Conventions shared by all scripts</h3>
+<ul>
+  <li><b>Run them from Abaqus:</b> <i>File &gt; Run Script...</i> in Abaqus/CAE (steps 1 and 2, with the model
+      database open) or in Abaqus/CAE or Viewer (steps 3 and 4). No other software is needed: the plots use the
+      matplotlib that comes with Abaqus.</li>
+  <li><b>INPUT block:</b> every script starts with a block of settings marked <code>INPUT</code>, each with a
+      comment. Most scripts also show a dialog with the same settings before they start.</li>
+  <li><b>Settings are remembered</b> by the export scripts (steps 3 and 4) in <code>1_Export_Auto_settings.json</code>
+      and <code>2_Image_export_settings.json</code> next to the scripts. A change in the dialog, in the JSON file or
+      in the INPUT block is used; the latest change wins. Delete the JSON file to go back to the INPUT block.</li>
+  <li><b>Progress is logged</b> to a <code>*_log.txt</code> file. Abaqus often shows the messages of a script
+      only when it has finished; open the log file to see how far a long run is.</li>
+  <li><b>Nothing is done twice:</b> analyses whose ODB exists, sections already in the results database and
+      existing images are skipped, so an interrupted run is continued by running the script again.</li>
+  <li><b>The A_ files belong together:</b> to use steps 3 and 4 in a folder with ODB files, copy every file and
+      folder whose name starts with <code>A_</code> into it (chapter 3.1).</li>
+</ul>
+
+<h3>The example of this tutorial</h3>
+<p>All figures come from the benchmark model of the repository's videos: a masonry wall
+(<code>PANEL_S-1</code>, 1200&nbsp;&times;&nbsp;2600&nbsp;&times;&nbsp;150&nbsp;mm, C3D8R elements of about 50&nbsp;mm) between a
+bottom beam and a top loading beam, with 16 cross-section SETs. The pictures, the results database and the curves
+of chapters 3&ndash;5 were produced by the scripts of this repository on the implicit analysis
+<code>SHEAR_key_S_FR05_FORCE_34272</code> (vertical force 34.3&nbsp;kN, pushover to 20&nbsp;mm); one curve comes from
+the explicit analysis <code>SHEAR_KEY_S_FR05_EX_172699</code>.</p>
+
+<div class="note"><b>Check your results.</b> As with any automated post-processing, verify the exported forces and
+displacements of a few sections before relying on them: chapter 1.4 shows a mistake that gives plausible-looking
+but wrong forces, and chapter 3.4 how to check a section.</div>
+
+<!-- ============================== 1 MODEL ============================== -->
+<h1 class="chapter" id="ch1"><span class="num">1</span>Preparing the model</h1>
+
+<h2 id="s1-1">1.1&nbsp;&nbsp;What a cross-section SET is</h2>
+<p>A cross-section is a cut through the model at which the forces and displacements are wanted, for example the
+bottom and the top of a pier. For the scripts it is an <b>assembly-level SET</b> that contains</p>
+<ul>
+  <li>a <b>node set: the nodes on the cut</b>, used for the displacements and rotations of the section and as the points
+      at which the forces are summed, and</li>
+  <li>an <b>element set: the elements on ONE side of the cut</b> (one layer touching the cut is enough), the
+      &ldquo;free body&rdquo; whose forces at the cut nodes give the section forces,</li>
+</ul>
+<p>both under the same name. Figure&nbsp;1 shows such a SET of the benchmark wall.</p>
+
+<figure>
+  <img src="figures/fig_set_3d.png" style="width:100%">
+  <figcaption><b>Figure 1.</b> SET <code>V_PIER&amp;DPARC&amp;1&amp;0</code> at the bottom of the wall: the node set holds the
+  100 nodes of the cut (z = 120&nbsp;mm, black dots), the element set the 72 elements of the layer above it
+  (orange). The bottom beam below the cut is not part of the SET. Arrows: the section axes for ANGLE&nbsp;0.</figcaption>
+</figure>
+
+<h2 id="s1-2">1.2&nbsp;&nbsp;Naming: TYPE&amp;LABEL&amp;INDEX&amp;ANGLE</h2>
+<p>The name of a SET tells the scripts how to treat it. It has four parts separated by <code>&amp;</code>:</p>
+<div class="anatomy keep">
+  <div><div class="part p1">V_PIER</div><div class="lab">TYPE: kind of section</div></div>
+  <div><div class="amp">&amp;</div></div>
+  <div><div class="part p2">DPARC</div><div class="lab">LABEL: free text, e.g. the position</div></div>
+  <div><div class="amp">&amp;</div></div>
+  <div><div class="part p3">1</div><div class="lab">INDEX: number, e.g. 1 = bottom, 2 = top</div></div>
+  <div><div class="amp">&amp;</div></div>
+  <div><div class="part p4">0</div><div class="lab">ANGLE: turn of the axes about global Z [&deg;]</div></div>
+</div>
+<table style="margin-top:4mm">
+  <tr><th style="width:22%">TYPE</th><th style="width:20%">geometry</th><th style="width:16%">section axes</th><th style="width:12%">forces</th><th>use</th></tr>
+  <tr><td><code>V_PIER</code>, <code>V_SPEC</code></td><td>solid elements</td><td>pier</td><td>yes</td><td>horizontal cuts of walls and piers</td></tr>
+  <tr><td><code>S_PIER</code></td><td>shell (line of nodes)</td><td>pier</td><td>yes</td><td>the same in shell models</td></tr>
+  <tr><td><code>V_SPANDREL</code>, <code>S_SPANDREL</code></td><td>solid / shell</td><td>spandrel</td><td>yes</td><td>vertical cuts of spandrels and beams</td></tr>
+  <tr><td><code>S_DRIFT</code></td><td>point (node average)</td><td>global</td><td>no</td><td>storey displacements (drift)</td></tr>
+  <tr><td><code>SRIFT</code></td><td>solid elements</td><td>pier</td><td>no</td><td>displacements and rotations only</td></tr>
+</table>
+<ul>
+  <li>INDEX and ANGLE must be numbers; the SET name must not contain other <code>&amp;</code> characters.</li>
+  <li>Only SETs whose name contains one of <code>PIER</code>, <code>SPEC</code>, <code>SPANDREL</code>,
+      <code>DRIFT</code> or <code>SRIFT</code> are exported; all other sets of the model are ignored. Helper sets
+      must therefore not contain these words.</li>
+  <li>Abaqus writes set names in capitals into the ODB; the scripts compare names without regard to case.</li>
+</ul>
+
+<figure>
+  <img src="figures/fig_set_map.png" style="width:86%">
+  <figcaption><b>Figure 2.</b> The 16 SETs of the benchmark wall in a front view. Several SETs share a cut: the
+  <code>V_PIER</code> SETs span the whole wall, the <code>V_SPEC</code> SETs its left or right half; <code>RU</code>
+  are the bottom of the bottom beam and the top of the loading beam. The two cuts in red italics are discussed in 1.4.</figcaption>
+</figure>
+
+<h2 id="s1-3">1.3&nbsp;&nbsp;Section axes, components and signs</h2>
+<p>Displacements and forces are written in the <b>section axes</b> x, y, z, which depend on the TYPE and
+ANGLE (Figure&nbsp;3). For a pier, z is the vertical axis (normal to the horizontal cut) and ANGLE turns x and y
+about it; ANGLE&nbsp;0 gives x&nbsp;=&nbsp;global&nbsp;X, y&nbsp;=&nbsp;global&nbsp;Y. For a spandrel the cut is vertical:
+z is the beam axis, x points down.</p>
+
+<figure>
+  <img src="figures/fig_axes.png" style="width:100%">
+  <figcaption><b>Figure 3.</b> Section axes (x red, y green, z blue) and the cut (orange) of a pier with ANGLE 0 and
+  90 and of a spandrel. The small triads are the global axes X, Y, Z.</figcaption>
+</figure>
+
+<table>
+  <tr><th style="width:20%">columns</th><th>meaning (pier with ANGLE 0, wall in the X&ndash;Z plane)</th></tr>
+  <tr><td><code>Ux Uy Uz</code></td><td>displacement of the section centre along x, y, z: Ux in-plane, Uy out of plane, Uz vertical</td></tr>
+  <tr><td><code>fix fiy fiz</code></td><td>rotation about x, y, z [rad]: fiy is the in-plane rotation (bending), fiz the twist</td></tr>
+  <tr><td><code>Fx Fy Fz</code></td><td>forces along x, y, z: Fx in-plane shear, Fy out-of-plane shear, Fz normal (axial) force</td></tr>
+  <tr><td><code>Mx My Mz</code></td><td>moments about x, y, z: My in-plane bending moment, Mx out-of-plane bending, Mz torsion</td></tr>
+</table>
+
+<div class="warn"><b>Signs of the forces.</b> The forces are those that the rest of the model exerts <i>on the
+element set</i>. The same internal force therefore has the opposite sign when the element set lies on the other
+side of the cut. In the example (Figure 9), the top section <code>V_PIER&amp;RU&amp;2&amp;0</code> (elements below
+the cut) gives Fz&nbsp;=&nbsp;&minus;34.8&nbsp;kN and a peak Fx&nbsp;=&nbsp;+23.8&nbsp;kN, the base section
+<code>V_PIER&amp;RU&amp;1&amp;0</code> (elements above the cut) Fz&nbsp;=&nbsp;+48.4&nbsp;kN and Fx&nbsp;=&nbsp;&minus;23.7&nbsp;kN:
+both are compression and the same shear (the base also carries the self-weight). Put the element sets on the same side for all sections of a
+kind, or correct the sign in the post-processing (e.g. <code>"factor": -1</code> of a curve, chapter 4).<br>
+<span class="small">Results exported before 28 September 2026 were written with axes turned by 180&deg; for odd INDEX;
+for those SETs Fx, Fy, Mx and My have the opposite sign.</span></div>
+
+<h2 id="s1-4">1.4&nbsp;&nbsp;Correct and wrong cuts</h2>
+<p>The element set must contain elements of <b>one side only</b>. If it holds the elements of both sides, the
+forces of the two sides cancel and the section reports nearly zero, without any error message. The displacements of
+such a SET are still correct, because they only use the nodes.</p>
+
+<figure>
+  <img src="figures/fig_cut_compare.png" style="width:100%">
+  <figcaption><b>Figure 4.</b> Two SETs of the benchmark (left half of the wall, front view) and their exported
+  forces at step time 2.0 of the explicit job <code>SHEAR_KEY_S_FR05_EX_172699</code>. Left: the cut at
+  z&nbsp;=&nbsp;120 lies on the boundary of the wall; the SET has the elements of one side. Right: the cut at
+  z&nbsp;=&nbsp;385 lies on a partition face inside the wall; the SET has the elements of both sides and gives
+  Fx&nbsp;=&nbsp;&minus;0.4&nbsp;kN instead of about 64&nbsp;kN.</figcaption>
+</figure>
+
+<p>In the benchmark this concerns the SETs at z&nbsp;=&nbsp;385 and z&nbsp;=&nbsp;2455 (Figure 2): they were made
+as geometry sets of partition faces inside the wall, and Abaqus puts the elements of both sides of such a face into
+the set. Checklist for every SET:</p>
+<ul>
+  <li><b>node set:</b> all nodes of the cut and only those (one plane of nodes; for shells one line);</li>
+  <li><b>element set:</b> elements touching the cut, all on the same side (more layers on that side do no harm);</li>
+  <li><b>at a contact or tie interface</b> (two parts with their own nodes) take the nodes and the elements of the
+      same part;</li>
+  <li><b>quick check:</b> the normal force Fz of a horizontal cut through the whole wall must equal the vertical load
+      above it (plus self-weight). A value near zero means elements on both sides.</li>
+</ul>
+
+<h2 id="s1-5">1.5&nbsp;&nbsp;Creating the SETs in Abaqus/CAE</h2>
+<p>Abaqus/CAE writes a SET with nodes and elements under one name in two ways. Both were checked with
+Abaqus/CAE 2021, and both give an <code>*Nset</code> and an <code>*Elset</code> of that name in the input file:</p>
+
+<h3>a) Cut on the boundary of a part: geometry set of the face</h3>
+<ol class="steps">
+  <li>Partition the part so that the cut is a face, and mesh it.</li>
+  <li>In the Assembly module: <i>Tools &gt; Set &gt; Create...</i>, name e.g. <code>V_PIER&amp;DPARC&amp;1&amp;0</code>,
+      type <i>Geometry</i>, select the face of the cut, <i>Done</i>.</li>
+</ol>
+<p>Abaqus stores the nodes of the face and the elements next to it. This is correct only if all those elements
+are on one side, i.e. the face is on the boundary of the part instance (like the faces between the wall and
+the beams in the benchmark). For a face inside a part use b).</p>
+
+<h3>b) Cut inside a part: node set + element set combined</h3>
+<ol class="steps">
+  <li><i>Tools &gt; Set &gt; Create...</i>, name <code>cut_nodes</code>, type <i>Node</i>: select the nodes of the cut
+      (easiest in a view looking along the cut, with a box selection, and with a display group showing only the
+      region: <i>Tools &gt; Display Group</i>).</li>
+  <li><i>Tools &gt; Set &gt; Create...</i>, name <code>cut_elements</code>, type <i>Element</i>: select the layer of
+      elements on one side of the cut.</li>
+  <li>Combine both into the section SET with one command in the kernel command line of Abaqus/CAE
+      (click the <code>&gt;&gt;&gt;</code> button left of the message area below the viewport):</li>
+</ol>
+<pre>a = mdb.models[<span class="s">'Model-1'</span>].rootAssembly
+a.SetByBoolean(name=<span class="s">'V_PIER&amp;DPARC&amp;2&amp;0'</span>, operation=UNION,
+               sets=(a.sets[<span class="s">'cut_nodes'</span>], a.sets[<span class="s">'cut_elements'</span>]))</pre>
+<p>Repeat for every section (replacing <code>cut_nodes</code> and <code>cut_elements</code>). The helper sets do not
+contain a section TYPE and are ignored by the export; delete them at the end if you like.</p>
+
+<div class="tip"><b>Tip.</b> Check a SET in Abaqus/Viewer before the analyses are run: <i>Tools &gt; Display Group &gt;
+Create</i>, item <i>Elements</i>, method <i>Element sets</i>, select the SET and <i>Replace</i>. You must see
+one layer of elements on one side of the cut.</div>
+
+<h2 id="s1-6">1.6&nbsp;&nbsp;Field output and the check script</h2>
+<table>
+  <tr><th style="width:30%">field output variable</th><th>needed for</th></tr>
+  <tr><td><code>U</code></td><td>displacements and rotations of the sections</td></tr>
+  <tr><td><code>NFORC</code></td><td>section forces (both the free-body cut and the NFORC method)</td></tr>
+  <tr><td><code>UR</code></td><td>rotation of shell sections about their own line (shell models only)</td></tr>
+  <tr><td>e.g. <code>DAMAGEC</code>, <code>DAMAGET</code>, <code>PEEQ</code>, <code>S</code></td><td>the variables of the pictures</td></tr>
+</table>
+<p>More output frames give more points on the curves and more frames to choose for the pictures.</p>
+
+<p><code>1_model_preparation/prepare_model_for_export.py</code> (Abaqus/CAE, model database open) lists the
+section SETs of one or all models and checks their names; optionally it sets the variables of the field output
+request <code>F-Output-1</code> (<code>FIELD_OUTPUT</code> in its INPUT block) and creates surfaces
+<code>SURF_&lt;SET&gt;</code> for the earlier scripts and videos (not needed by the current export).
+<code>convert_models_to_explicit_EXAMPLE.py</code> is a recorded example of converting the benchmark models to
+Abaqus/Explicit; record the same actions for your own model and use it as a template.</p>
+
+<!-- ============================== 2 ANALYSES ============================== -->
+<h1 class="chapter" id="ch2"><span class="num">2</span>Running the analyses</h1>
+<p>Both scripts of <code>2_run_analyses</code> run in Abaqus/CAE with the model database open
+(<i>File &gt; Run Script...</i>). The ODB files are written to the work directory (<i>File &gt; Set Work Directory...</i>).</p>
+<table>
+  <tr><th style="width:30%">workflow</th><th style="width:32%">script</th><th>runs</th></tr>
+  <tr><td><b>A &ndash; pushover analyses</b></td><td><code>run_pushover_jobs.py</code></td><td>the chosen models at every vertical force</td></tr>
+  <tr><td><b>B &ndash; parameter study</b></td><td><code>run_parameter_study.py</code></td><td>the models with every value of a contact or CDP-material parameter</td></tr>
+</table>
+
+<h2 id="s2-1">2.1&nbsp;&nbsp;Workflow A: pushover analyses (run_pushover_jobs.py)</h2>
+<p>For every chosen model and every vertical force the script sets the force, creates the job
+<code>&lt;model&gt;_EX_&lt;force&gt;</code> and submits it, a given number of analyses at a time, each on a given
+number of cores. A dialog shows the INPUT block and lets you change it:</p>
+
+<div class="dlg">
+  <div class="bar">run_pushover_jobs.py</div>
+  <div class="body">
+    <div class="label">Pushover analyses of the open model database
+work directory: D:\Abaqus\Benchmark_wall</div>
+    <table>
+      <tr><td class="f">Models (separated by commas; * and ? as wildcards, * = all):</td><td><span class="entry">BEND_*</span></td></tr>
+      <tr><td class="f">Vertical forces (separated by commas; empty = as in the model):</td><td><span class="entry">34272, 172699, 360000</span></td></tr>
+      <tr><td class="f">Analyses at the same time:</td><td><span class="entry">2</span></td></tr>
+      <tr><td class="f">Cores per analysis:</td><td><span class="entry">4</span></td></tr>
+    </table>
+    <div class="buttons"><span class="btn">OK</span><span class="btn">Cancel</span></div>
+  </div>
+</div>
+<p class="small" style="text-align:center">Figure 5. First dialog (Abaqus&rsquo; own input dialog; the texts are those of the script, the values typed by the user).</p>
+
+<table>
+  <tr><th style="width:24%">field</th><th>meaning</th></tr>
+  <tr><td>Models</td><td>model names of the open .cae, separated by commas; <code>*</code> and <code>?</code> as wildcards
+      (not case sensitive): <code>*</code> = all models, <code>BEND_*</code> = all models starting with BEND_</td></tr>
+  <tr><td>Vertical forces</td><td>one analysis per force, in the force unit of the model; the concentrated force
+      <code>VERT_FORCE</code> gets <code>cf3 = -force</code> (downwards) in the steps <code>VERT</code> and <code>HOR</code>.
+      Empty: the models are run with the force they have (job name <code>&lt;model&gt;_EX</code>).</td></tr>
+  <tr><td>Analyses at the same time</td><td>the script submits this many analyses; before the next one it waits for
+      the oldest running analysis (analyses finished meanwhile also free their place)</td></tr>
+  <tr><td>Cores per analysis</td><td><code>numCpus</code> and <code>numDomains</code> of every job. Analyses at a time
+      &times; cores should not exceed the cores (and licence tokens) of the computer.</td></tr>
+</table>
+
+<p>A second dialog lists what will be done and asks before anything in the model is changed:</p>
+<div class="dlg" style="max-width:105mm">
+  <div class="bar">Warning</div>
+  <div class="body"><div class="msg">6 analyses: 2 model(s) x 3 vertical forces
+2 at the same time, 4 cores each
+skipped (ODB already in the work directory or running): 1
+
+BEND_NOkey_S_FR07_EX_172699
+BEND_NOkey_S_FR07_EX_360000
+BEND_key_S_FR05_EX_34272
+BEND_key_S_FR05_EX_172699
+BEND_key_S_FR05_EX_360000
+
+Set the forces, create and submit the jobs?</div>
+    <div class="buttons"><span class="btn">Yes</span><span class="btn">No</span></div></div>
+</div>
+<p class="small" style="text-align:center">Figure 6. Confirmation: <code>BEND_NOkey_S_FR07_EX_34272.odb</code> already exists and is skipped.</p>
+
+<p>Progress goes to <code>run_pushover_jobs_log.txt</code> in the work directory:</p>
+<pre>2026-11-12 10:15:43  skipped (BEND_NOkey_S_FR07_EX_34272.odb exists): BEND_NOkey_S_FR07_EX_34272
+2026-11-12 10:15:44  submitted: BEND_NOkey_S_FR07_EX_172699 (1 running)
+2026-11-12 10:15:46  submitted: BEND_NOkey_S_FR07_EX_360000 (2 running)
+2026-11-12 10:15:46  waiting for BEND_NOkey_S_FR07_EX_172699
+2026-11-12 11:02:17  finished: BEND_NOkey_S_FR07_EX_172699 (COMPLETED)
+2026-11-12 11:02:19  submitted: BEND_key_S_FR05_EX_34272 (2 running)
+...
+2026-11-12 12:31:05  DONE: 5 submitted, 1 skipped, 0 failed - still running: BEND_key_S_FR05_EX_172699,
+                     BEND_key_S_FR05_EX_360000 (see the Job Manager)</pre>
+
+<ul>
+  <li>Abaqus/CAE stays busy until the last analysis has been <i>submitted</i>; the last ones then run on
+      (<code>WAIT_AT_END = True</code> also waits for them).</li>
+  <li>Jobs whose <code>&lt;job&gt;.odb</code> or <code>&lt;job&gt;.lck</code> exists are skipped: run the script again
+      to continue an interrupted series; delete the ODB of a failed analysis to repeat it.</li>
+  <li>INPUT block only: <code>LOAD_NAME</code>, <code>LOAD_STEPS</code>, the job name pattern <code>JOB_NAME</code>,
+      <code>JOB_SETTINGS</code> (memory, explicit precision, ...), <code>SUBMIT = False</code> (only write the input
+      files <code>&lt;job&gt;.inp</code>, e.g. for another computer) and <code>ASK = False</code> (no dialogs, e.g.
+      <code>abaqus cae noGUI=run_pushover_jobs.py</code>).</li>
+</ul>
+
+<h2 id="s2-2">2.2&nbsp;&nbsp;Workflow B: parameter study (run_parameter_study.py)</h2>
+<p>For every model and every value of the studied parameter the model is changed, a job is created and submitted.
+The study, the models and the values are set in the INPUT block:</p>
+<pre><span class="h">STUDY</span> = <span class="s">"material"</span>                  <span class="c"># INPUT: "contact" | "material"</span>
+<span class="h">MODELS</span> = [<span class="s">"BEND_NOkey_S_FR07"</span>]      <span class="c"># INPUT: models of the open .cae to run</span>
+<span class="h">JOB_PREFIXES</span> = None                 <span class="c"># INPUT: None = the model names; or one prefix per model</span>
+<span class="c"># -- contact</span>
+<span class="h">CONTACT_PROPERTY</span> = <span class="s">"Simple_contact"</span>   <span class="c"># interaction property of the model</span>
+<span class="h">CONTACT_FRICTION</span> = 0.5
+<span class="h">CONTACT_DAMPING</span> = [0, 0.0001, 0.001, 0.01]
+<span class="h">CONTACT_PRESSURE</span> = [1, 5, 10, 100, 1000]   <span class="c"># exponential pressure-overclosure</span>
+<span class="c"># -- material</span>
+<span class="h">MATERIAL_NAME</span> = <span class="s">"BETON"</span>             <span class="c"># material of the model that gets the CDP data</span>
+<span class="c"># -- jobs</span>
+<span class="h">SUBMIT</span> = True;  <span class="h">JOBS_AT_ONCE</span> = 2;  <span class="h">CORES_PER_JOB</span> = 4</pre>
+<table>
+  <tr><th style="width:16%">STUDY</th><th>changed in the model</th><th style="width:34%">job name</th></tr>
+  <tr><td><code>contact</code></td><td>interaction property: friction, exponential pressure-overclosure, damping
+      (every damping &times; every pressure)</td><td><code>&lt;prefix&gt;_Damping_&lt;d&gt;pressure&lt;p&gt;</code></td></tr>
+  <tr><td><code>material</code></td><td>material <code>BETON</code>: elasticity and the CDP tables, one job per
+      material of <code>material_CDP</code></td><td><code>&lt;model&gt;_MAT_&lt;material&gt;</code></td></tr>
+</table>
+<p>Skipping of finished jobs, analyses at a time, cores and <code>SUBMIT = False</code> work as in workflow&nbsp;A; the
+log file is <code>run_parameter_study_log.txt</code>. A new kind of study is added in chapter 6.1.</p>
+
+<h2 id="s2-3">2.3&nbsp;&nbsp;CDP materials</h2>
+<p>The material study reads concrete damaged plasticity (CDP) materials from the folder
+<code>2_run_analyses/material_CDP</code>, given in one of two ways:</p>
+<table>
+  <tr><th style="width:27%">input folder</th><th>format</th></tr>
+  <tr><td><code>A_Material_input_indirect</code></td><td>one line per material, tab separated:
+      <code>name&nbsp;E&nbsp;v&nbsp;s_max&nbsp;e_smax&nbsp;e_u&nbsp;(not&nbsp;used)&nbsp;Sigma_T&nbsp;GFI</code>. The compression curve follows the
+      Eurocode formula &sigma; = s_max (k&eta; &minus; &eta;&sup2;) / (1 + (k &minus; 2)&eta;), the tension is given by the
+      tensile strength and the fracture energy (Abaqus type GFI).</td></tr>
+  <tr><td><code>A_material_input_direct</code></td><td>one text file per material with the tables themselves, e.g.
+      calibrated in a spreadsheet (layout: <code>Example_direct.txt</code>; the layout is checked).</td></tr>
+</table>
+<pre><span class="c"># A_Material_input_indirect/Example_EC_materials.txt (made-up example values)</span>
+	Example_EC_C20	30000	0.2	20	0.002	0.0035	0.06	2.0	0.1
+	Example_EC_C30	33000	0.2	30	0.0022	0.0035	0.07	2.9	0.13</pre>
+<figure>
+  <img src="figures/fig_materials.png" style="width:100%">
+  <figcaption><b>Figure 7.</b> The example materials as the study writes them into the model: compression curve and
+  compression damage. <code>Example_direct</code> was made from the same values as <code>Example_EC_C20</code>, so the
+  two curves coincide. Run a material script on its own (python) to check new input.</figcaption>
+</figure>
+
+<!-- ============================== 3 EXPORT ============================== -->
+<h1 class="chapter" id="ch3"><span class="num">3</span>Section export (A_1_Export_Auto.py)</h1>
+
+<h2 id="s3-1">3.1&nbsp;&nbsp;Files and the settings dialog</h2>
+<p>Copy everything whose name starts with <code>A_</code> from <code>3_export_and_image_export</code> into the
+folder with the ODB files (or anywhere, and choose the ODB folder in the dialog):</p>
+<pre>Benchmark_wall\
+  A_1_Export_Auto.py              <span class="c">step 3: section export</span>
+  A_2_Image_save_view.py          <span class="c">step 4: save a picture (chapter 4)</span>
+  A_2_Image_export_Auto.py        <span class="c">step 4: images and curves (chapter 5)</span>
+  A_IMPORT_additional_functions\  <span class="c">library - must stay next to the scripts</span>
+  SHEAR_key_S_FR05_EX_34272.odb
+  SHEAR_key_S_FR05_EX_172699.odb  ...</pre>
+<p>Run <code>A_1_Export_Auto.py</code> with <i>File &gt; Run Script...</i> in Abaqus/CAE or Viewer. The settings dialog
+opens with the settings of the last export:</p>
+
+<figure>
+  <img class="shot" src="figures/dialog_export_settings.png" style="width:74%">
+  <figcaption style="text-align:center"><b>Figure 8.</b> Settings dialog of the section export.</figcaption>
+</figure>
+<div>
+    <table>
+      <tr><th style="width:24%">field</th><th>meaning</th></tr>
+      <tr><td>ODB folder, files</td><td>all ODB files of the folder are selected; multi-select with Ctrl / Shift</td></tr>
+      <tr><td>Step</td><td>empty = the last step of each ODB (e.g. <code>HOR</code>)</td></tr>
+      <tr><td>Results database</td><td>folder of the results (default <code>Panel_results</code> next to the script)</td></tr>
+      <tr><td>SET name filter</td><td>only SETs containing one of these texts, e.g. <code>RU, DPARC</code>; empty = all</td></tr>
+      <tr><td>Analysis type</td><td>Auto detects implicit / explicit per ODB</td></tr>
+      <tr><td>Rotation method</td><td><b>rigid</b>: rigid-body fit, valid for large rotations; angle, slope: regression
+          plane (moderate / small rotations). <i>absolute</i>: orientation instead of the change from the start</td></tr>
+      <tr><td>Force method</td><td><b>freebody</b>: Abaqus free-body cut; <b>nforc</b>: sum of NFORC by the script (same
+          result, see 3.4)</td></tr>
+      <tr><td>Min. frame time step</td><td>keep a frame only if it is at least this much step time after the last kept
+          one (implicit default 1.0); empty = every frame</td></tr>
+      <tr><td>Overwrite, Continue, Copy .inp</td><td>re-export existing sections; go on after a failing SET; copy the
+          input file of each job into the database</td></tr>
+    </table>
+</div>
+<p><i>Run export</i> saves the settings and starts. Sections already in the database are skipped unless
+<i>Overwrite</i> is ticked. Without the dialog (<code>USE_GUI = False</code>) the export also runs in batch mode:
+<code>abaqus cae noGUI=A_1_Export_Auto.py</code> (the 16 sections of the example take 13&nbsp;s).</p>
+
+<h2 id="s3-2">3.2&nbsp;&nbsp;What is computed</h2>
+<p>For every ODB and every SET, frame by frame:</p>
+<ul>
+  <li><b>Displacements and rotations</b> (<code>Ux Uy Uz fix fiy fiz</code>) of the section from the displacements
+      <code>U</code> of its nodes: the rigid-body motion that fits the nodes best (also correct for large
+      rotations), resolved in the section axes. Rotations are relative (change from the undeformed state) unless
+      <i>absolute</i> is ticked.</li>
+  <li><b>Forces</b> (<code>Fx Fy Fz Mx My Mz</code>) acting on the element set at the cut nodes, in the section axes,
+      about the area-weighted centre of the cut: by an Abaqus free-body cut (default), or by summing the element nodal
+      forces NFORC directly from the ODB.</li>
+  <li>Displacements and forces are matched <b>frame by frame</b> by the position of the frame in the step (in
+      Abaqus/Explicit the frame id is the increment number, which is not used).</li>
+</ul>
+
+<h2 id="s3-3">3.3&nbsp;&nbsp;The results database</h2>
+<p>The results are text files in one folder per SET and job. The database of the example:</p>
+<pre>Panel_results\
+  baza sadzaj liste.txt                     <span class="c">list of the exported jobs</span>
+  V_PIER&amp;RU&amp;2&amp;0\
+    Attributes.json                         <span class="c">centre and size of the cut</span>
+    SHEAR_KEY_S_FR05_FORCE_34272\
+      Section_dataIIIIV_PIER&amp;RU&amp;2&amp;0IIIISHEAR_KEY_S_FR05_FORCE_34272.txt
+  V_PIER&amp;RU&amp;1&amp;0\  ...                     <span class="c">16 SET folders</span></pre>
+<pre><span class="c"># Section_dataIIIIV_PIER&amp;RU&amp;2&amp;0IIIISHEAR_KEY_S_FR05_FORCE_34272.txt  (first rows of 53)</span>
+<span class="h">Time,frameId,Ux,Uy,Uz,fix,fiy,fiz,Fx,Fy,Fz,Mx,My,Mz,</span>
+0.0,0,0.0,0.0,-0.0416,0.0,0.0,0.0,0.002,5.348,-34635.2,823195.5,-1552.0,-24.6,
+1.0,1,0.0167,0.0,-0.0416,0.0,0.0,0.0,755.6,5.554,-34636.3,823403.7,-1070320.0,15537.6,
+2.0,2,0.0591,0.0,-0.0416,0.0,0.0,0.0,2344.1,5.430,-34637.8,823233.0,-3316900.0,48613.2,
+<span class="c"># Attributes.json</span>
+{"DimensionZ": 0.0, "DimensionX": 1200.0005, "DimensionY": 480.0,
+ "CoordZ": 2839.9998, "CoordY": 19.9998, "CoordX": 1800.0002}</pre>
+<p class="small">Values are in the units of the model (here N, mm, rad, Nmm; numbers shortened). <i>Time</i> is the
+step time, <i>frameId</i> the position of the frame in the step.</p>
+
+<h2 id="s3-4">3.4&nbsp;&nbsp;Checking the results</h2>
+<p>Three checks, from quick to thorough:</p>
+<ol>
+  <li><b>Equilibrium:</b> the normal force of a horizontal cut through the whole wall equals the vertical load (plus
+      self-weight); top and base shear are equal and opposite (signs, 1.3). Near-zero forces: see 1.4.</li>
+  <li><b>Both methods:</b> export once with <i>freebody</i> and once with <i>nforc</i> into two databases, or run
+      <code>section_forces.py</code> of the library on its own with <code>"METHOD": "compare"</code> in its
+      <code>DEMO_SETTINGS</code>; it prints both and their differences. Figure 9 shows the result for the example.</li>
+  <li><b>Abaqus itself:</b> in Abaqus/Viewer create a free-body cut from the node set and the element set of the SET
+      (<i>Tools &gt; Free Body Cut &gt; Create...</i>), plot its force over time (<i>Tools &gt; XY Data &gt; Create...</i>,
+      source <i>Free body</i>) and compare with the column of the section file. Resolve the cut in the section axes
+      (a datum coordinate system) to compare the components.</li>
+</ol>
+<figure>
+  <img src="figures/fig_forces_compare.png" style="width:100%">
+  <figcaption><b>Figure 9.</b> Fx, Fz and My of the top and the base section of the example, from the Abaqus
+  free-body cut (thick) and from the NFORC sum (dashed): all 153 frames agree within 0.001&nbsp;%.</figcaption>
+</figure>
+
+<!-- ============================== 4 SAVE VIEW ============================== -->
+<h1 class="chapter" id="ch4"><span class="num">4</span>Defining pictures (A_2_Image_save_view.py)</h1>
+<p>Pictures are set up once in Abaqus/Viewer as usual, and saved as a <b>view</b> that the image export (chapter 5)
+replays for every ODB and frame.</p>
+<ol class="steps">
+  <li>Open an ODB in Abaqus/Viewer and set up the picture: camera, section (view) cut, display group (hide or show
+      parts), variable, contour type and limits, deformation scale, visible edges, legend, triad, background.</li>
+  <li><i>File &gt; Run Script... &gt; A_2_Image_save_view.py</i> (or the Plug-ins button, see below) and fill in the dialog.</li>
+  <li>Repeat for every picture; then run <code>A_2_Image_export_Auto.py</code>.</li>
+</ol>
+
+<div class="dlg">
+  <div class="bar">Save view</div>
+  <div class="body">
+    <div class="label">Save the current picture for A_2_Image_export_Auto.py
+(views without own frames use FRAMES of the settings: 10 evenly spread)
+Empty picture name + curve field = change only the curves</div>
+    <table>
+      <tr><td class="f">Picture name - view, or view__variable:</td><td><span class="entry">Front__DAMAGET</span></td></tr>
+      <tr><td class="f">Frames of this view (empty = unchanged; 5 | all | last | every 3 | 0, 25, -1 | times 1.5, 3.0; default):</td><td><span class="entry">all</span></td></tr>
+      <tr><td class="f">Contour limits (empty = as shown in Abaqus; auto | 0, 0.5 | auto, 1 | max 0.1 | min 0):</td><td><span class="entry">0, 1</span></td></tr>
+      <tr><td class="f">Curves of the export (empty = unchanged; edit = choose sections and variables; on; off):</td><td><span class="entry">edit</span></td></tr>
+    </table>
+    <div class="buttons"><span class="btn">OK</span><span class="btn">Cancel</span></div>
+  </div>
+</div>
+<p class="small" style="text-align:center">Figure 10. The dialog of <code>A_2_Image_save_view.py</code> (Abaqus&rsquo; own input dialog; texts as in the script).</p>
+
+<table>
+  <tr><th style="width:22%">field</th><th>meaning</th></tr>
+  <tr><td>Picture name</td><td><code>Front</code>: view &ldquo;Front&rdquo; with the variable shown now;
+      <code>Front__DAMAGET</code>: view &ldquo;Front&rdquo;, variable named &ldquo;DAMAGET&rdquo;. Saving the same view with
+      another variable adds the variable; camera etc. are updated.</td></tr>
+  <tr><td>Frames</td><td>frames of this view: <code>5</code> (evenly spread), <code>all</code>, <code>last</code>,
+      <code>every 3</code>, <code>0, 25, -1</code> (positions), <code>times 1.5, 3.0</code> (step times),
+      <code>default</code> (FRAMES of the settings); empty = unchanged</td></tr>
+  <tr><td>Contour limits</td><td>of this picture (view + variable): empty = as shown in Abaqus (fixed values or
+      automatic are read from the session), <code>auto</code>, <code>0, 0.5</code>, <code>auto, 1</code>,
+      <code>max 0.1</code>, <code>min 0</code>. Two views of one variable can have different limits.</td></tr>
+  <tr><td>Curves</td><td><code>edit</code> opens the curve dialog (Figure 11), <code>on</code> / <code>off</code>
+      switches the curves of the export; empty = unchanged</td></tr>
+</table>
+<p>What is stored: camera, section cuts, edges, render style, deformation scale, contour settings, legend, title,
+triad, background, plot state, variable and limits &ndash; read from the session; the display group is taken from
+this session&rsquo;s <code>abaqus.rpy</code> (Abaqus cannot report it otherwise). A preview PNG is saved in
+<code>Panel_images/_view_previews</code>.</p>
+
+<h3>The curve dialog</h3>
+<figure>
+  <img class="shot" src="figures/dialog_curves.png" style="width:100%">
+  <figcaption><b>Figure 11.</b> Curve dialog (field <i>Curves</i> = <code>edit</code>): the sections and variables are
+  listed from the results database of chapter 3. Shown: the curve &ldquo;Fx_vs_drift&rdquo; with
+  Y&nbsp;=&nbsp;0.001&nbsp;&times;&nbsp;Fx of the top section (kN) and X&nbsp;=&nbsp;Ux of the top minus Ux of the base
+  section, for every job whose name contains SHEAR.</figcaption>
+</figure>
+<ul>
+  <li>Each axis is a variable of one section, or two of them combined: <i>A&nbsp;&minus;&nbsp;B</i> (e.g. relative
+      displacement of two sections), <i>A&nbsp;+&nbsp;B</i>, <i>A&nbsp;&times;&nbsp;B</i>, <i>A&nbsp;/&nbsp;B</i> (e.g. Fx/Fz).
+      <i>Factor</i> scales the axis (0.001: N &rarr; kN, &minus;1: sign); <i>Axis label</i> replaces the formula as label.</li>
+  <li><i>Jobs containing / not containing</i> choose the jobs a curve is drawn for, e.g. one curve for the SHEAR
+      jobs and another one for all others.</li>
+  <li><i>Save</i> stores the curve (and draws a preview for the ODB shown in Abaqus); several curves can be defined.</li>
+</ul>
+
+<div class="note"><b>Other ways to define pictures.</b> <i>Capture</i>: print every picture with <i>File &gt; Print</i>
+to a PNG named <code>&lt;view&gt;__&lt;variable&gt;</code>, then run <code>A_2_Image_export_Auto.py</code> with
+<code>MODE = "capture"</code>; it reads the views from <code>abaqus.rpy</code>. <i>Plug-ins button</i>: copy the two files
+of <code>optional_abaqus_plugin</code> to <code>C:\Users\&lt;name&gt;\abaqus_plugins</code> and restart Abaqus;
+<i>Plug-ins &gt; Image export &gt; Save current view...</i> then runs the script of the ODB&rsquo;s folder.</div>
+
+<!-- ============================== 5 IMAGE EXPORT ============================== -->
+<h1 class="chapter" id="ch5"><span class="num">5</span>Images and curves (A_2_Image_export_Auto.py)</h1>
+<p>Run <code>A_2_Image_export_Auto.py</code> (<i>File &gt; Run Script...</i>, or <code>abaqus cae noGUI=A_2_Image_export_Auto.py</code>).
+It exports <b>every ODB &times; every view &times; its variables &times; its frames</b> and draws the curves of every job.
+The first lines of its log list what will be done:</p>
+<pre>Views        : Front [default], Front_fixed [last]
+Variables    : S_Min_Principal, U1
+Frames       : default = 4 evenly spread   |   image size: [1200, 800]
+Limits       : Front                      S_Min_Principal    automatic
+Limits       : Front                      U1                 min 0.0 (fixed) / max 20.0 (fixed)
+Limits       : Front_fixed                S_Min_Principal    min -10.0 (fixed) / max 0.0 (fixed)
+Curve        : Fx_vs_drift: Y = 0.001 * Fx(V_PIER&amp;RU&amp;2&amp;0),
+                            X = Ux(V_PIER&amp;RU&amp;2&amp;0) - Ux(V_PIER&amp;RU&amp;1&amp;0)  (jobs all)
+...
+  step HOR: 4 of 153 frames -> [0, 51, 101, 152]
+DONE in 0.1 min: 9 new image(s), 0 failed ODB(s)</pre>
+<pre>Panel_images\
+  SHEAR_KEY_S_FR05_FORCE_34272\                 <span class="c">one folder per job</span>
+    _curve_Fx_vs_drift.png   _curve_Fx_vs_drift.csv
+    U1\Front\f0000_t0.png  f0051_t21.7527.png  f0101_t40.3361.png  f0152_t59.7221.png
+    S_Min_Principal\Front\...                   <span class="c">&lt;variable&gt;\&lt;view&gt;\f&lt;frame&gt;_t&lt;step time&gt;.png</span>
+    S_Min_Principal\Front_fixed\f0152_t59.7221.png</pre>
+
+<figure>
+  <img src="figures/fig_frames.png" style="width:100%">
+  <figcaption><b>Figure 12.</b> The four frames of view &ldquo;Front&rdquo;, variable U1, with fixed limits 0&ndash;20&nbsp;mm
+  (deformation scale 20): with fixed limits the colours of all frames and jobs can be compared. Values outside the
+  limits are grey (frame 0: &minus;0.003&nbsp;mm).</figcaption>
+</figure>
+<figure>
+  <img src="figures/fig_limits.png" style="width:66%">
+  <figcaption><b>Figure 13.</b> The same frame in two views: automatic limits (&ldquo;Front&rdquo;) and the limits
+  <code>-10, 0</code> (&ldquo;Front_fixed&rdquo;) &ndash; limits belong to the picture (view + variable).</figcaption>
+</figure>
+
+<h3>Curves</h3>
+<div class="two keep">
+  <figure><img class="shot" src="figures/curve_demo_Fx_vs_drift.png">
+    <figcaption><b>Figure 14.</b> <code>_curve_Fx_vs_drift.png</code> of the example: the 4 frames of the images are
+    marked with their number (<code>f51</code> = the images <code>f0051_t21.7527.png</code>).</figcaption></figure>
+  <figure><img class="shot" src="figures/curve_explicit_Fx_vs_Ux.png">
+    <figcaption><b>Figure 15.</b> A curve of an explicit analysis of the same wall
+    (<code>SHEAR_KEY_S_FR05_EX_172699</code>), 10 image frames.</figcaption></figure>
+</div>
+<p>Next to each PNG a CSV file holds the points and the image frames, for use in a spreadsheet:</p>
+<pre>Time,Ux top - Ux base [mm],Fx [kN],image frames
+0.0,0.0,2.00220942497253e-06,f0
+1.0,0.01671745441854,0.755562316894531,
+2.0,0.0591462291777134,2.34408325195313,</pre>
+
+<h3>Settings</h3>
+<ul>
+  <li>Views, variables, frames, folders, image size and curves are stored in <code>2_Image_export_settings.json</code>;
+      copy it to another folder to export there with identical settings.</li>
+  <li><code>FRAMES</code> (all views without own frames): <code>{"MODE": "uniform", "COUNT": 10}</code>, or short text as in
+      the Save view dialog. <code>IMAGE_SIZE</code>: e.g. <code>[1200, 800]</code> pixels; <code>None</code> = as on screen.</li>
+  <li>Existing images are kept (<code>OVERWRITE = False</code>), so an interrupted export continues;
+      <code>ZIP_PER_JOB = True</code> packs every job into one ZIP file (faster to copy).</li>
+  <li><code>ADD_FRAMES_AROUND_PEAK = True</code> also exports the peak of the first curve and the points at
+      <code>BEFORE_PEAK</code> / <code>AFTER_PEAK</code> &times; peak (e.g. 75&nbsp;% before and 80&nbsp;% after the peak).</li>
+</ul>
+
+<!-- ============================== 6 CHANGING ============================== -->
+<h1 class="chapter" id="ch6"><span class="num">6</span>Changing the scripts</h1>
+<p>The scripts are plain Python 2.7 (Abaqus 2021) and are meant to be adapted. Three typical changes:</p>
+
+<h2>6.1&nbsp;&nbsp;A new parameter study</h2>
+<p>In <code>run_parameter_study.py</code> a study is two functions: the cases (job name ending and value) and the
+change of the model. Example: a study of the friction coefficient of the contact:</p>
+<pre><span class="k">def</span> change_friction(model, mu):
+    prop = model.interactionProperties[CONTACT_PROPERTY]
+    prop.tangentialBehavior.setValues(formulation=PENALTY, table=((mu, ), ),
+                                      maximumElasticSlip=FRACTION, fraction=0.005)
+
+<span class="k">def</span> cases_friction():
+    <span class="k">return</span> [(<span class="s">"_FR%s"</span> % str(mu).replace(<span class="s">"."</span>, <span class="s">""</span>), mu) <span class="k">for</span> mu <span class="k">in</span> (0.4, 0.5, 0.6, 0.7)]
+
+STUDIES = {<span class="s">"contact"</span>: (cases_contact, change_contact),
+           <span class="s">"material"</span>: (cases_material, change_material),
+           <span class="s">"friction"</span>: (cases_friction, change_friction)}     <span class="c"># then STUDY = "friction"</span></pre>
+<p>Record the change once in Abaqus/CAE and copy the command from <code>abaqus.rpy</code> into the change function.</p>
+
+<h2>6.2&nbsp;&nbsp;A new section type</h2>
+<p>Section types are one list in <code>A_IMPORT_additional_functions/section_definitions.py</code> (the first
+matching token wins):</p>
+<pre>SECTION_TYPES = [
+    SectionType(<span class="s">"V_PIER"</span>,     (<span class="s">"V_PIER"</span>, <span class="s">"V_SPEC"</span>), <span class="s">"volume"</span>, <span class="s">"PIER"</span>,     True),
+    ...
+    <span class="c"># new: SETs named V_WALL&amp;...</span>
+    SectionType(<span class="s">"V_WALL"</span>,     (<span class="s">"V_WALL"</span>,),          <span class="s">"volume"</span>, <span class="s">"PIER"</span>,     True),
+]
+<span class="c">#   name, tokens in the SET name, geometry ("volume" | "shell" | "point"),</span>
+<span class="c">#   axes ("PIER" | "SPANDREL" | None), forces exported (True / False)</span></pre>
+<p>Run the module on its own (<code>python section_definitions.py</code>) to see how example names are classified.
+Also add the token to <code>SECTION_TOKENS</code> of <code>prepare_model_for_export.py</code> so that the check lists
+the new SETs.</p>
+
+<h2>6.3&nbsp;&nbsp;Your own post-processing of the results database</h2>
+<p>The results database is plain text, so any Python (or a spreadsheet) can process it, without Abaqus. Example: the
+peak shear of the top section and the displacement at the peak, for every job:</p>
+<pre><span class="k">import</span> os, glob, csv
+db, section = <span class="s">r"D:\Abaqus\Benchmark_wall\Panel_results"</span>, <span class="s">"V_PIER&amp;RU&amp;2&amp;0"</span>
+<span class="k">for</span> path <span class="k">in</span> sorted(glob.glob(os.path.join(db, section, <span class="s">"*"</span>, <span class="s">"Section_data*.txt"</span>))):
+    rows = list(csv.DictReader(open(path)))
+    peak = max(rows, key=<span class="k">lambda</span> r: abs(float(r[<span class="s">"Fx"</span>])))
+    job = os.path.basename(os.path.dirname(path))
+    print(<span class="s">"%-32s Fx max = %8.1f kN at Ux = %6.2f mm (t = %s)"</span> % (
+        job, float(peak[<span class="s">"Fx"</span>]) / 1000, float(peak[<span class="s">"Ux"</span>]), peak[<span class="s">"Time"</span>]))</pre>
+<pre>SHEAR_KEY_S_FR05_FORCE_34272     Fx max =     23.8 kN at Ux =   0.99 mm (t = 8.5625)</pre>
+<p>Inside the image export, curves (chapter 4) cover most needs; <code>pushover_curve.py</code> reads the database in
+the same way and can be extended (e.g. a new operation in <code>OPERATIONS</code>).</p>
+
+<h2>6.4&nbsp;&nbsp;Where to find what</h2>
+<table>
+  <tr><th style="width:32%">module (A_IMPORT_additional_functions)</th><th>contents</th></tr>
+  <tr><td><code>odb_tools.py</code></td><td>opening ODBs, frame selection (frame sync), sets, field values, logging</td></tr>
+  <tr><td><code>section_definitions.py</code></td><td>SET name &rarr; section type and axes</td></tr>
+  <tr><td><code>section_geometry.py</code></td><td>regression plane, rigid-body fit, rotations, cut centroid</td></tr>
+  <tr><td><code>section_displacements.py</code></td><td>displacements and rotations of the sections</td></tr>
+  <tr><td><code>section_forces.py</code></td><td>free-body cut and NFORC forces (stand-alone: compare both)</td></tr>
+  <tr><td><code>database_io.py</code></td><td>results database (folders, file names, columns)</td></tr>
+  <tr><td><code>export_settings.py</code>, <code>export_gui.py</code></td><td>remembered settings, settings dialog</td></tr>
+  <tr><td><code>image_export.py</code>, <code>rpy_views.py</code>, <code>view_snapshot.py</code></td><td>replaying views, reading <code>abaqus.rpy</code>, snapshot of the session</td></tr>
+  <tr><td><code>pushover_curve.py</code></td><td>curves from the results database, curve dialog</td></tr>
+</table>
+<div class="warn"><b>After changing a library file</b> restart Abaqus/CAE or Viewer: Abaqus keeps imported modules
+for the whole session. (The scripts only reload library modules that were imported from another folder.)</div>
+
+<!-- ============================== A TROUBLESHOOTING ============================== -->
+<h1 class="chapter" id="chA"><span class="num">A</span>Troubleshooting</h1>
+<table>
+  <tr><th style="width:38%">message or symptom</th><th>cause and remedy</th></tr>
+  <tr><td>Folder A_IMPORT_additional_functions not found next to this script</td><td>copy the folder together with the A_ scripts (3.1)</td></tr>
+  <tr><td>No .odb files found in ...</td><td>choose the ODB folder in the dialog, or set <code>ODB_FOLDER</code></td></tr>
+  <tr><td>A section has forces near zero</td><td>element set on both sides of the cut (1.4)</td></tr>
+  <tr><td>Forces of two sections have opposite signs</td><td>their element sets lie on different sides of the cut (1.3)</td></tr>
+  <tr><td>SET ... must look like TYPE&amp;LABEL&amp;INDEX&amp;ANGLE / INDEX and ANGLE must be numbers</td><td>rename the SET (1.2); helper sets must not contain PIER, SPEC, SPANDREL, DRIFT or SRIFT</td></tr>
+  <tr><td>Abaqus seems to hang during an export</td><td>open the <code>*_log.txt</code> file next to the script: it shows the current ODB, SET and frame</td></tr>
+  <tr><td>Model(s) not in the open .cae / no model 'X'</td><td>model name or wildcard does not match (2.1); names are listed in the message</td></tr>
+  <tr><td>model ... has no load VERT_FORCE</td><td>set <code>LOAD_NAME</code> / <code>LOAD_STEPS</code> of <code>run_pushover_jobs.py</code> to the names of your model</td></tr>
+  <tr><td>the dialog could not be shown (noGUI)</td><td>batch runs (<code>abaqus cae noGUI=...</code>) need <code>ASK = False</code> / <code>USE_GUI = False</code></td></tr>
+  <tr><td>Curve: section ... is not in the database</td><td>run the section export first (chapter 3), or choose the results database in the curve dialog</td></tr>
+  <tr><td>An image looks different from the screen</td><td>display group or a setting was not stored: save the view again after setting it up; check the preview in <code>Panel_images/_view_previews</code></td></tr>
+  <tr><td>A change in a library file has no effect</td><td>restart Abaqus (6.4)</td></tr>
+</table>
+
+<!-- ============================== B VIDEOS ============================== -->
+<h1 class="chapter" id="chB"><span class="num">B</span>Video tutorials and further reading</h1>
+<p>The videos were recorded with the <b>earlier version</b> of the scripts: the modelling (SETs, naming, local axes)
+is the same; script names and input differ (no <code>Input_file.txt</code> any more &ndash; the scripts have an INPUT
+block, dialogs and remembered settings).</p>
+<table>
+  <tr><th style="width:52%">video</th><th>link</th></tr>
+  <tr><td>How the scripts work &ndash; overview, from a new model to extracted results</td><td>https://youtu.be/g9gw_EXEesM</td></tr>
+  <tr><td>Creation of the benchmark model</td><td>https://youtu.be/stwDfm0-Hc0</td></tr>
+  <tr><td>Cross-section naming and local axes (chapter 1)</td><td>https://youtu.be/6BFI6Eegp64</td></tr>
+  <tr><td>Export script (chapter 3)</td><td>https://youtu.be/nRnF_rlyfsg</td></tr>
+  <tr><td>Displacement and force conversion modification demo</td><td>https://youtu.be/nNw8NbOuac0</td></tr>
+  <tr><td>Automated job running (chapter 2)</td><td>https://youtu.be/iR5NVptAlkw</td></tr>
+  <tr><td>Adding a custom post-processing function (chapter 6)</td><td>https://youtu.be/oXEkcqDdTa8</td></tr>
+  <tr><td>Entire playlist</td><td>https://www.youtube.com/playlist?list=PLjdnR7Fv3RGjCVFS0ykvkd6-2jo0IHgPl</td></tr>
+</table>
+<h3>In the repository</h3>
+<ul>
+  <li><code>README.md</code> of the repository and of every step folder: short reference of the scripts.</li>
+  <li><code>docs/flowchart</code>: flowchart and short report of steps 3 and 4 (PDF, PNG, SVG, HTML, Visio, draw.io).</li>
+  <li><code>readme.txt</code>: the texts of the earlier README files.</li>
+  <li>The INPUT block and the description at the top of every script.</li>
+</ul>
+<p class="small" style="margin-top:8mm">This tutorial: <code>docs/tutorial/source/tutorial.html</code>; the PDF is
+rebuilt with <code>python build_pdf.py</code> in that folder (Microsoft Edge and PyMuPDF).</p>
+
+</body>
+</html>
