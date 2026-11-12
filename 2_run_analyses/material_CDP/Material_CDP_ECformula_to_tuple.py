@@ -7,7 +7,7 @@ k = 1.05 E e_smax / s_max, and a linear tension softening.
 
     CDP_material_definition_ECformula({name: {"E", "v", "s_max", "e_smax", "e_u", "Sigma_T", "GFI"}})
     -> {name: {"Elastic", "Compression_input", "damageC", "tension_input", "damageT"}}
-The tables are tuples ready for  ....setValues(table=...)  (see change_material in run_jobs.py).
+The tables are tuples ready for  ....setValues(table=...)  (see change_material in run_parameter_study.py).
 
 Run on its own (python or abaqus python) for a test material.
 """
