@@ -9,6 +9,9 @@ spandrels), usable wherever section forces and displacements are needed.
 > **Check your results.** As with any automated post-processing, verify the exported forces and
 > displacements on a few sections (e.g. against a free-body cut in Abaqus/Viewer) before relying on them.
 
+**Tutorial (PDF):** [docs/tutorial/Tutorial_Abaqus_scripts_for_output_processing.pdf](docs/tutorial/Tutorial_Abaqus_scripts_for_output_processing.pdf)
+- model preparation, running the analyses, section export, pictures and curves, step by step.
+
 ![Post-processing module](docs/flowchart/Flowchart_postprocessing_overview.png)
 
 ## Workflow
@@ -16,7 +19,7 @@ spandrels), usable wherever section forces and displacements are needed.
 | Step | Folder | Script(s) | What it does |
 |---|---|---|---|
 | 1 | [`1_model_preparation`](1_model_preparation) | `prepare_model_for_export.py`<br>`convert_models_to_explicit_EXAMPLE.py` | checks the cross-section SETs (names, field output); example of converting models to Abaqus/Explicit |
-| 2 | [`2_run_analyses`](2_run_analyses) | `run_jobs.py` (+ `material_CDP`) | parameter study: one job per model and value (vertical force, contact properties or CDP material), already finished jobs are skipped |
+| 2 | [`2_run_analyses`](2_run_analyses) | `run_pushover_jobs.py`<br>`run_parameter_study.py` (+ `material_CDP`) | A: pushover analyses of the chosen models at every vertical force (dialog: models, analyses at a time, cores per analysis); B: parameter study (contact properties or CDP material); finished analyses are skipped |
 | 3 | [`3_export_and_image_export`](3_export_and_image_export) | `A_1_Export_Auto.py` | displacements, rotations and forces of every cross-section and frame &rarr; results database (text files) |
 | 4 | [`3_export_and_image_export`](3_export_and_image_export) | `A_2_Image_save_view.py`<br>`A_2_Image_export_Auto.py` | define the pictures once in Abaqus/Viewer, then print them for every job and frame; pushover curves with the image frames marked |
 
@@ -31,8 +34,9 @@ A detailed flowchart and a short report of steps 3 and 4 are in [`docs/flowchart
    `TYPE&LABEL&INDEX&ANGLE`, e.g. `V_PIER&RU&2&0` (see [cross-section SETs](#cross-section-sets));
    request field output `U` and `NFORC` (and `UR` for shell sections, plus the variables you want
    in the images). Run `1_model_preparation/prepare_model_for_export.py` to check the SET names.
-2. **Analyses** (Abaqus/CAE): set `STUDY`, `MODELS` and the values at the top of
-   `2_run_analyses/run_jobs.py`, open the .cae and run it (File > Run Script).
+2. **Analyses** (Abaqus/CAE): open the .cae and run `2_run_analyses/run_pushover_jobs.py`
+   (File > Run Script); its dialog asks for the models, the vertical forces, the analyses at a
+   time and the cores per analysis. Parameter studies: `run_parameter_study.py`.
 3. **Section export** (Abaqus/CAE or Viewer): copy the A_ files next to the ODB files and run
    `A_1_Export_Auto.py`; choose ODB files, step and methods in its dialog.
    Result: `Panel_results/<SET>/<JOB>/Section_data...txt`.
@@ -92,7 +96,8 @@ scripts have an INPUT block and remember their settings).
 * Adding a custom post-processing function: https://youtu.be/oXEkcqDdTa8
 * Entire playlist: https://www.youtube.com/playlist?list=PLjdnR7Fv3RGjCVFS0ykvkd6-2jo0IHgPl
 
-A written tutorial (PDF with pictures) is planned, see [`docs/tutorial`](docs/tutorial).
+**Written tutorial** (PDF, 22 pages with pictures of the benchmark model, the dialogs and the
+outputs): [`docs/tutorial/Tutorial_Abaqus_scripts_for_output_processing.pdf`](docs/tutorial/Tutorial_Abaqus_scripts_for_output_processing.pdf).
 The texts of the earlier README files are kept in [`readme.txt`](readme.txt).
 
 ## Citation and contact

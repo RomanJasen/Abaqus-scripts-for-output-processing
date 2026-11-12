@@ -84,3 +84,8 @@ WHAT CHANGED SINCE THESE TEXTS (November 2026)
   frames of the images marked are drawn for every job.
 * Large rotations (rigid-body fit), frame synchronisation of forces and displacements, and a
   settings dialog (GUI) of the section export.
+* Automated job running (2_run_analyses): run_pushover_jobs.py replaces
+  Automatic_job_running_generalEXPLICIT.py (dialog: models, vertical forces, analyses at a time,
+  cores per analysis); run_parameter_study.py replaces Automatic_job_running_contact.py and
+  "Automatic_job_running - Material testing.py".
+* A written tutorial with pictures: docs/tutorial/Tutorial_Abaqus_scripts_for_output_processing.pdf
