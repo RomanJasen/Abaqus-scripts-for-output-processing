@@ -2,8 +2,10 @@
 section_forces.py - section forces Fx, Fy, Fz, Mx, My, Mz of a cut.
 
 A SET needs a node set (nodes on the cut) and an element set (elements on one
-side of the cut) with the same name. Forces are resolved in the section csys
-given by SectionSet.force_csys_points(). Two methods (DEFAULT_FORCE_OPTIONS):
+side of the cut) with the same name; both_sides_warning() reports SETs whose
+element set has elements of both sides (their forces cancel). Forces are resolved
+in the section csys given by SectionSet.force_csys_points(). Two methods
+(DEFAULT_FORCE_OPTIONS):
 
   "freebody"  Abaqus free-body cut (session.FreeBodyFromNodesElements) read with
               ONE XYDataFromFreeBody call for all frames. Needs the CAE kernel.
@@ -308,6 +310,71 @@ def extract_forces_nforc(odb, section, frames, options=None, return_centres=Fals
     for rec in frames:
         out[rec.index], centres[rec.index] = cut.evaluate(rec.frame)
     return (out, centres) if return_centres else out
+
+
+# =============================================================================
+# Check: element set on both sides of the cut
+# =============================================================================
+def side_direction(section, points):
+    """Direction separating the two sides of the cut, oriented along section z: the normal of the
+    plane through the cut nodes (solid sections), or section z made normal to the line of nodes
+    (shell sections)."""
+    z = csys_basis(section.force_csys_points())[2]
+    pts = np.asarray(points, dtype=np.float64)
+    centred = pts - pts.mean(axis=0)
+    if len(pts) >= 3:
+        s, vt = np.linalg.svd(centred, full_matrices=False)[1:]
+        if s[1] > 1e-9 * max(s[0], 1.0):                 # the nodes span a plane
+            return vt[2] if vt[2].dot(z) >= 0 else -vt[2]
+    if len(pts) >= 2:                                    # a line of nodes
+        d = np.linalg.svd(centred, full_matrices=False)[2][0]
+        w = z - z.dot(d) * d
+        if np.linalg.norm(w) > 1e-9:
+            return w / np.linalg.norm(w)
+    return z
+
+
+def cut_sides(odb, section):
+    """(plus, minus): elements of the element set that touch the cut nodes, with their centre on
+    the +z / -z side of the cut. Elements of both sides cancel each other's forces at the cut
+    nodes: plus > 0 and minus > 0 means wrong (about zero) section forces. Elements that do not
+    touch the cut nodes do not count (e.g. the other part at a contact interface)."""
+    cut = dict(odb_tools.set_nodes(odb_tools.get_node_set(odb, section.set_name)))
+    elements = odb_tools.set_elements(odb_tools.get_element_set(odb, section.set_name))
+    if not cut:
+        return 0, 0
+    coords = dict((k, np.asarray(c, dtype=np.float64)) for k, c in cut.items())
+    pts = np.array(list(coords.values()))
+    direction = side_direction(section, pts)
+    level = pts.mean(axis=0).dot(direction)
+    tol = 1e-6 * max(float((pts.max(axis=0) - pts.min(axis=0)).max()), 1.0)
+    instances = odb.rootAssembly.instances
+    plus = minus = 0
+    for _, conn in elements:
+        if not any(k in cut for k in conn):
+            continue
+        xyz = []
+        for k in conn:
+            if k not in coords:
+                coords[k] = np.asarray(instances[k[0]].getNodeFromLabel(k[1]).coordinates, dtype=np.float64)
+            xyz.append(coords[k])
+        side = float(np.mean(xyz, axis=0).dot(direction)) - level
+        if side > tol:
+            plus += 1
+        elif side < -tol:
+            minus += 1
+    return plus, minus
+
+
+def both_sides_warning(odb, section):
+    """'' if the element set lies on one side of the cut, else the text of a warning."""
+    plus, minus = cut_sides(odb, section)
+    if plus and minus:
+        return ("the element set has elements on BOTH sides of the cut (%d on the +z side, %d on the -z side, "
+                "all touching the cut nodes): their forces cancel and the exported forces are wrong (about "
+                "zero); the displacements are correct. Use the elements of one side only - see "
+                "1_model_preparation/README.md" % (plus, minus))
+    return ""
 
 
 # =============================================================================
