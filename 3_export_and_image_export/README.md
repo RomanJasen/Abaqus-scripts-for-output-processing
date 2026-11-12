@@ -7,7 +7,8 @@ File > Run Script... Each has an INPUT block at the top; the settings are rememb
 `1_Export_Auto_settings.json` / `2_Image_export_settings.json` (copy those too to use the same
 settings in another folder).
 
-Flowchart and short report: [`../docs/flowchart`](../docs/flowchart).
+Flowchart and short report: [`../docs/flowchart`](../docs/flowchart). Step-by-step guide with
+pictures: chapters 3-5 of the [tutorial](../docs/tutorial).
 
 ## Step 3 - `A_1_Export_Auto.py`: section export
 
